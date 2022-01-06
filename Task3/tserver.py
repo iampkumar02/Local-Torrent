@@ -1,24 +1,45 @@
-from socket import *
-import time
-start_time = time.time()
-host = "localhost"
-port = 12345
-server = socket(AF_INET, SOCK_DGRAM)
+import socket
+import os
+from tqdm import tqdm
 
-server.bind((host, port))
-print("server is listening")
+IP = "localhost"
+PORT = 4456
+ADDR = (IP, PORT)
+SIZE = 1024
+FORMAT = "utf-8"
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind(ADDR)
+server.listen()
 
-s, addr = server.recvfrom(1024)
-print(s.decode("utf-8"), addr)
-msg = "I"
-server.sendto(msg.encode("utf-8"), addr)
-msg = "Am"
-server.sendto(msg.encode("utf-8"), addr)
-msg = "P"
-server.sendto(msg.encode("utf-8"), addr)
-msg = "K"
-server.sendto(msg.encode("utf-8"), addr)
-print(round(time.time()-start_time, 2))
-time.sleep(10)
-ss, addrr = server.recvfrom(1024)
-print(ss, addrr)
+FILENAME = "E:\Computer Network\Tasks\server_data\\long.txt"
+FILESIZE = os.path.getsize(FILENAME)
+
+
+def get():
+    print("Server is listening...")
+    s, addr = server.accept()
+    data = f"{FILENAME}@{FILESIZE}"
+    # print(data)
+    s.send(data.encode(FORMAT))
+    msg = s.recv(SIZE).decode(FORMAT)
+    print(f"SERVER: {msg}")
+
+    """ Data transfer. """
+    bar = tqdm(range(FILESIZE), f"Sending long.txt",
+               unit="B", unit_scale=True, unit_divisor=SIZE)
+
+    with open("E:\Computer Network\Tasks\server_data\\long.txt", "r") as f:
+        while True:
+            data = f.read(SIZE)
+
+            if not data:
+                break
+
+            s.send(data.encode(FORMAT))
+
+            bar.update(len(data))
+    s.close()
+    server.close()
+
+
+get()

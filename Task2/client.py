@@ -1,5 +1,6 @@
 import socket
 import os
+import time
 
 IP = "localhost"
 PORT = 4456
@@ -60,6 +61,7 @@ def main():
             if text == "File not found.":
                 print(text)
             else:
+                start_time = time.time()
                 dirname = "E:\Computer Network\Tasks/client_data"
                 filelist = os.listdir(dirname)
                 filepath = os.path.join(dirname, filename)
@@ -82,6 +84,7 @@ def main():
                         f.write(text)
 
                 print("File successfully downloaded.")
+                print(f"Time: {time.time() - start_time}")
 
     print("Disconnected from the server.")
     client.close()
