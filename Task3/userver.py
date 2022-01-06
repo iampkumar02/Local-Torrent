@@ -3,13 +3,13 @@ import os
 from tqdm import tqdm
 
 IP = "localhost"
-PORT = 4444
+PORT = 4456
 ADDR = (IP, PORT)
 SIZE = 1024
 FORMAT = "utf-8"
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server.bind(ADDR)
-server.listen()
+# server.listen()
 
 FILENAME = "E:\Computer Network\Local-torrent\server_data\\share.txt"
 FILESIZE = os.path.getsize(FILENAME)
@@ -17,12 +17,13 @@ FILESIZE = os.path.getsize(FILENAME)
 
 def get():
     print("Server is listening...")
-    s, addr = server.accept()
+    # s, addr = server.accept()
+    s, addr = server.recvfrom(1024)
+    print(s.decode("utf-8"))
+
     data = f"{FILENAME}@{FILESIZE}"
-    # print(data)
-    s.send(data.encode(FORMAT))
-    msg = s.recv(SIZE).decode(FORMAT)
-    print(f"SERVER: {msg}")
+
+    server.sendto(data.encode(FORMAT), addr)
 
     """ Data transfer. """
     bar = tqdm(range(FILESIZE), f"Sending long.txt",
@@ -35,10 +36,9 @@ def get():
                 if not data:
                     break
 
-                s.send(data.encode(FORMAT))
+                server.sendto(data.encode(FORMAT), addr)
 
                 bar.update(len(data))
-    s.close()
     server.close()
 
 

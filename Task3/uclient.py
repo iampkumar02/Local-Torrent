@@ -1,27 +1,29 @@
 import socket
 from tqdm import tqdm
 IP = "localhost"
-PORT = 4444
+PORT = 4456
 ADDR = (IP, PORT)
 SIZE = 1024
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(ADDR)
+client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# client.connect(ADDR)
 
+client.sendto("Sending to server...".encode("utf-8"), ADDR)
 
-data = client.recv(1024).decode('utf-8')
+data, add = client.recvfrom(1024)
+data = data.decode("utf-8")
 item = data.split("@")
 FILENAME = item[0]
 FILESIZE = int(item[1])
-client.send("Filename and filesize received".encode("ascii"))
 
 """ Data transfer """
 bar = tqdm(range(
     FILESIZE), f"Receiving long.txt", unit="B", unit_scale=True, unit_divisor=SIZE)
 for i in range(1, 20):
-    with open("E:\Computer Network\Local-torrent\client_data\\text.txt", "w") as f:
+    with open("E:\Computer Network\Local-torrent\client_data\\text_u.txt", "w") as f:
         while True:
-            data = client.recv(SIZE).decode("utf-8")
+            data, add = client.recvfrom(SIZE)
+            data = data.decode("utf-8")
 
             if not data:
                 break
@@ -29,4 +31,5 @@ for i in range(1, 20):
             f.write(data)
 
             bar.update(len(data))
+
 client.close()
