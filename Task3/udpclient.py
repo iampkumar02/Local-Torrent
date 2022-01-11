@@ -10,7 +10,9 @@ SIZE = 1024
 
 def main():
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
+    ip = "localhost"
+    port = 10001
+    client.bind((ip, port))
     while True:
         data = input("> ")
         data = data.split(" ")

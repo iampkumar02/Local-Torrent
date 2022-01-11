@@ -62,7 +62,7 @@ def main():
                 print(text)
             else:
                 start_time = time.time()
-                dirname = "E:\Computer Network\Tasks/client_data"
+                dirname = "/data/data/com.termux/files/home/storage"
                 filelist = os.listdir(dirname)
                 filepath = os.path.join(dirname, filename)
                 name = filename.split(".")

@@ -1,0 +1,24 @@
+{
+    "users": [
+        {
+            "username": "iampkumar",
+            "count": 1000
+        },
+        {
+            "username": "devansh",
+            "count": 144
+        },
+        {
+            "username": "dev",
+            "count": 1444
+        },
+        {
+            "username": "daemon",
+            "count": 50000
+        },
+        {
+            "username": "iffgb",
+            "count": 0
+        }
+    ]
+}

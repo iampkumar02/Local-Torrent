@@ -7,6 +7,8 @@ SIZE = 1024
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(ADDR)
+username = input("Enter username: ")
+client.send(username.encode("utf-8"))
 
 
 data = client.recv(1024).decode('utf-8')
@@ -14,19 +16,18 @@ item = data.split("@")
 FILENAME = item[0]
 FILESIZE = int(item[1])
 client.send("Filename and filesize received".encode("ascii"))
-
 """ Data transfer """
 bar = tqdm(range(
     FILESIZE), f"Receiving long.txt", unit="B", unit_scale=True, unit_divisor=SIZE)
-for i in range(1, 20):
-    with open("E:\Computer Network\Local-torrent\client_data\\text.txt", "w") as f:
-        while True:
-            data = client.recv(SIZE).decode("utf-8")
 
-            if not data:
-                break
+with open("E:\Computer Network\Local-torrent\client_data\\text.txt", "w") as f:
+    while True:
+        data = client.recv(SIZE).decode("utf-8")
+        # if cnt == 40000 or cnt == 60000:
+        #     input("Press Enter to continue...")
+        if not data:
+            break
 
-            f.write(data)
-
-            bar.update(len(data))
+        f.write(data)
+        bar.update(len(data))
 client.close()

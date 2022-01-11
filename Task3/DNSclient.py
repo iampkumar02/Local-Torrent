@@ -44,7 +44,7 @@ def client_send():
                 if text == "File not found.":
                     print(text)
                 else:
-                    dirname = "E:\Computer Network\Tasks/client_data"
+                    dirname = "E:\Computer Network\Local-torrent/client_data"
                     filelist = os.listdir(dirname)
                     filepath = os.path.join(dirname, filename)
                     name = filename.split(".")
@@ -69,10 +69,11 @@ def client_send():
 
             elif info[0] == "UPLOAD":
                 dirname = os.getcwd()
-                path = f"E:/Computer Network/Tasks/client_data/{info[1]}"
+                path = f"E:/Computer Network/Local-torrent/client_data/{info[1]}"
                 with open(f"{path}", "r") as f:
                     text = f.read()
                 filename = path.split("/")[-1]
+                print(filename)
                 send_data = f"{info[0]}@{filename}@{text}"
                 udp_s.sendto(send_data.encode("ascii"), ADDR)
 
