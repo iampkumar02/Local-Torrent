@@ -16,7 +16,21 @@ server.listen()
 FILENAME = "E:\Computer Network\Local-torrent\server_data\\share.txt"
 FILESIZE = os.path.getsize(FILENAME)
 
-# def temp_file_fetch(user,cnt):
+
+def temp_file_fetch(user, cnt):
+    with open('temp_file.json', 'r') as g:
+        json_data = json.load(g)
+        user1 = json_data['users']
+        l = len(user1)
+        for i in range(0, l):
+            name = user1[i]['username']
+            if name == user:
+                user1[i]['count'] = cnt
+                break
+
+        with open('temp_file.json', 'w') as g:
+            g.write(json.dumps(json_data))
+    g.close()
 
 
 def get():
@@ -61,6 +75,11 @@ def get():
                 v = i['count']
                 f.seek(v)
                 break
+        j = 0
+        while j < v/1024:
+            j += 1
+            bar.update(1024)
+
         g.close()
         cnt1 = 0
         while True:
@@ -77,36 +96,14 @@ def get():
                 cnt -= 1
                 print(f"Total No. of Packets sended: {cnt}")
                 cnt1 = 1
-                with open('temp_file.json', 'r') as g:
-                    json_data = json.load(g)
-                    user1 = json_data['users']
-                    l = len(user1)
-                    for i in range(0, l):
-                        name = user1[i]['username']
-                        if name == user:
-                            user1[i]['count'] = v+(cnt*SIZE)
-                            break
-
-                    with open('temp_file.json', 'w') as g:
-                        g.write(json.dumps(json_data))
-                g.close()
+                cnt = v+(cnt*SIZE)
+                temp_file_fetch(user, cnt)
                 sys.exit()
         if not cnt1:
-            with open('temp_file.json', 'r') as g:
-                json_data = json.load(g)
-                user1 = json_data['users']
-                l = len(user1)
-                for i in range(0, l):
-                    name = user1[i]['username']
-                    if name == user:
-                        user1[i]['count'] = 0
-
-                with open('temp_file.json', 'w') as g:
-                    g.write(json.dumps(json_data))
-            g.close()
+            temp_file_fetch(user, 0)
 
     s.close()
-    print(f"\nTotal No. of Packets sended: {cnt}")
+    # print(f"\nTotal No. of Packets sended: {cnt}")
 
 
 get()

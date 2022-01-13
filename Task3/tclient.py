@@ -1,5 +1,6 @@
 import socket
 from tqdm import tqdm
+import json
 IP = "localhost"
 PORT = 4444
 ADDR = (IP, PORT)
@@ -21,6 +22,21 @@ bar = tqdm(range(
     FILESIZE), f"Receiving long.txt", unit="B", unit_scale=True, unit_divisor=SIZE)
 
 with open("E:\Computer Network\Local-torrent\client_data\\text.txt", "w") as f:
+    g = open('temp_file.json')
+    data = json.load(g)
+    v = 0
+    for i in data['users']:
+        name = i['username']
+        if name == username:
+            v = i['count']
+            f.seek(v)
+            break
+    j = 0
+    while j < v/1024:
+        j += 1
+        bar.update(1024)
+
+    g.close()
     while True:
         data = client.recv(SIZE).decode("utf-8")
         # if cnt == 40000 or cnt == 60000:
