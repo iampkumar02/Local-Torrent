@@ -2,24 +2,22 @@ import socket
 import sys
 import threading
 
-rendezvous = ('localhost', 55555)
-
-# connect to rendezvous
 print('connecting to rendezvous server')
+main_ip=9000
+ADDR = ('localhost', 44443)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind(('0.0.0.0', 50006))
-sock.sendto(b'0', rendezvous)
+sock.bind(('localhost', main_ip))
+sock.sendto(b'0',ADDR )
 
 while True:
-    data = sock.recvfrom(1024)[0].decode()
+    data = sock.recv(1024).decode()
 
     if data.strip() == 'ready':
         print('checked in with server, waiting')
         break
 
-data = sock.recvfrom(1024)[0].decode("utf-8")
-sock.close()
+data = sock.recv(1024).decode()
 ip, sport, dport = data.split(' ')
 sport = int(sport)
 dport = int(dport)
@@ -34,7 +32,8 @@ print('  dest port:   {}\n'.format(dport))
 print('punching hole')
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-# sock.sendto(b'0', (ip, dport))
+sock.bind(('localhost', main_ip))
+sock.sendto(b'0', (ip, sport))
 
 print('ready to exchange messages\n')
 
@@ -43,12 +42,12 @@ print('ready to exchange messages\n')
 
 
 def listen():
-    # sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # sock.bind(('192.168.1.7', sport))
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(('localhost', 55555))
 
     while True:
-        data = sock.recvfrom(1024)
-        print('\rpeer: {}\n> '.format(data[0].decode("utf-8")))
+        data = sock.recv(1024)
+        print('\rpeer: {}\n> '.format(data.decode()), end='')
 
 
 listener = threading.Thread(target=listen, daemon=True)
@@ -56,9 +55,9 @@ listener.start()
 
 # send messages
 # equiv: echo 'xxx' | nc -u -p 50002 x.x.x.x 50001
-# sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-# sock.bind(('192.168.1.7', dport))
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.bind(('localhost', 22222))
 
 while True:
     msg = input('> ')
-    sock.sendto(msg.encode("utf-8"), (ip, sport))
+    sock.sendto(msg.encode(), (ip, 12121))
