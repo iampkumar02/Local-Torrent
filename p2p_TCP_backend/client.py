@@ -1,10 +1,17 @@
 from socket import *
 import threading
+import mysql
+
+db = mysql.connect("torrent.db")
+db_conn = db.cursor()
 
 ip = "192.168.1.7"
 port = 44444
 ADDR = (ip, port)
 username = input("Enter your username: ")
+
+query = f'INSERT INTO users(user_name) VALUES("{username}")'
+db_conn.execute(query)
 
 # add username to database
 # pass
@@ -20,10 +27,6 @@ c_server.send(username.encode("utf-8"))
 peers_ip_list = {}
 
 ADDR1 = ("localhost", 12000)
-
-
-def file_transfer(ip_new):
-    pass
 
 
 # Group messaging---------------------------------
@@ -43,16 +46,20 @@ def client_receive():
 def client_send():
     while True:
         message = f'{username}: {input("")}'
-        print("{}: {}".format(username, message))
+        # print(message)
         c_server.send(message.encode('utf-8'))
 
 
 def group_msg():
+    print("Good to GO!")
     receive_thread = threading.Thread(target=client_receive, args=())
     receive_thread.start()
 
     send_thread = threading.Thread(target=client_send, args=())
     send_thread.start()
+
+    receive_thread.join()
+    send_thread.join()
 
 # private messaging with other peer---------------------
 # which receiving it acts as a server for making TCP connection
@@ -108,6 +115,7 @@ def accepting_msg_connection(ip_new):
 
 
 def private_msg(ip_new):
+    print("Good to GO!")
     thread = threading.Thread(target=creating_msg_connection, args=())
     thread.start()
 
@@ -118,37 +126,65 @@ def private_msg(ip_new):
     thread.join()
     accept_thread.join()
 
-# choose an option out of three options--------------------
+
+def file_transfer(ip_new):
+    print("Good to GO!")
+    # pass
 
 
-def diff_options(ip_new):
-    while True:
-        print("Enter: \n1. Private Message\n2. Group Message\n3. File transfer\n")
-        choice = int(input("Input: "))
-        print("Your choice is:", choice)
-        if choice == 1:
-            thread = threading.Thread(target=private_msg, args=(ip_new,))
-            thread.start()
-            thread.join()
-            # private_msg(ip_new)
-        elif choice == 2:
-            group_msg()
-        elif choice == 3:
-            file_transfer(ip_new)
-        else:
-            print("Invalid choice, Please try again!")
-
-
-# get ip address of other peers from server and go for the choices------------
 while True:
-    peer_name = input("Enter the peer name to connect with: ")
-    c_server.send(peer_name.encode("utf-8"))
-    data = c_server.recv(1024).decode("utf-8")
-    data = data.split(" ")
-    ip_new, port_new = data
-    ip_new = (ip_new, port_new)
-    print("IP address of peer received from server:", ip_new)
-    peers_ip_list[peer_name] = ip_new
-    diff_options(ip_new)
+    # choose an option out of three options--------------------
+    print("Enter: \n1. Private Message\n2. Group Message\n3. File transfer\n")
+    choice = int(input("Input: "))
+    print("Your choice is:", choice)
+
+    if choice == 1:
+        c_server.send(str(choice).encode("utf-8"))
+        peer_name = input("Enter the peer name to connect with: ")
+        c_server.send(peer_name.encode("utf-8"))
+        # get ip address of other peers from server-----------
+        data = c_server.recv(1024).decode("utf-8")
+        data = data.split(" ")
+        ip_new, port_new = data
+        ip_new = (ip_new, port_new)
+        print("IP address of peer received from server:", ip_new)
+        peers_ip_list[peer_name] = ip_new
+
+        thread = threading.Thread(target=private_msg, args=(ip_new,))
+        thread.start()
+        thread.join()
+    elif choice == 2:
+        c_server.send(str(choice).encode("utf-8"))
+        thread = threading.Thread(target=group_msg, args=())
+        thread.start()
+        thread.join()
+    elif choice == 3:
+        c_server.send(str(choice).encode("utf-8"))
+        peer_name = input("Enter the peer name to connect with: ")
+        c_server.send(peer_name.encode("utf-8"))
+        filelist_from_server = c_server.recv(1024).decode("utf-8")
+        while True:
+            file_no = input("Enter the file no to receive: ")
+            c_server.send(file_no.encode("utf-8"))
+
+            reply = c_server.recv(1024).decode("utf-8")
+            if reply == "You choosed wrong fle no":
+                print("Please choose a file from the list.")
+            else:
+                break
+
+        # get ip address of other peers from server-----------
+        data = reply.split(" ")
+        ip_new, port_new = data
+        ip_new = (ip_new, port_new)
+        print("IP address of peer received from server:", ip_new)
+        peers_ip_list[peer_name] = ip_new
+
+        thread = threading.Thread(target=file_transfer, args=(ip_new,))
+        thread.start()
+        thread.join()
+    else:
+        print("Invalid choice, Please try again!")
+
     # thread = threading.Thread(target=diff_options, args=(ip_new,))
     # thread.start()
