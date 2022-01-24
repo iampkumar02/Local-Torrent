@@ -17,12 +17,15 @@ item = data.split("@")
 FILENAME = item[0]
 FILESIZE = int(item[1])
 client.send("Filename and filesize received".encode("ascii"))
+
+# Downloading text.txt file from server
+
 """ Data transfer """
 bar = tqdm(range(
     FILESIZE), f"Receiving long.txt", unit="B", unit_scale=True, unit_divisor=SIZE)
-
+cnt_size=0
 with open("E:\Computer Network\Local-torrent\client_data\\text.txt", "w") as f:
-    g = open('temp_file.json')
+    g = open('E:\Computer Network\Local-Torrent\\temp_file.json')
     data = json.load(g)
     v = 0
     for i in data['users']:
@@ -38,6 +41,7 @@ with open("E:\Computer Network\Local-torrent\client_data\\text.txt", "w") as f:
 
     g.close()
     while True:
+        cnt_size+=1
         data = client.recv(SIZE).decode("utf-8")
         # if cnt == 40000 or cnt == 60000:
         #     input("Press Enter to continue...")
@@ -47,3 +51,4 @@ with open("E:\Computer Network\Local-torrent\client_data\\text.txt", "w") as f:
         f.write(data)
         bar.update(len(data))
 client.close()
+print("Size of file received now: ", cnt_size/1024)

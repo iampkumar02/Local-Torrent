@@ -36,7 +36,9 @@ def temp_file_fetch(user, cnt):
 def get():
     print("Server is listening...")
     s, addr = server.accept()
+    print("Connection established!")
     user = s.recv(1024).decode("utf-8")
+    print("Username received: " + user)
 
     f = open('temp_file.json')
     data = json.load(f)
@@ -82,6 +84,7 @@ def get():
 
         g.close()
         cnt1 = 0
+        cnt_size=0
         while True:
             data = f.read(SIZE)
 
@@ -89,18 +92,21 @@ def get():
                 break
             cnt += 1
             try:
+                cnt_size+=1
                 s.send(data.encode(FORMAT))
                 bar.update(len(data))
             except:
                 print("\nClient stopped receiving!")
                 cnt -= 1
                 print(f"Total No. of Packets sended: {cnt}")
+                print("Size of file sended now: ", cnt_size/1024)
                 cnt1 = 1
                 cnt = v+(cnt*SIZE)
                 temp_file_fetch(user, cnt)
                 sys.exit()
         if not cnt1:
             temp_file_fetch(user, 0)
+        print("Size of file sended now: ", cnt_size/1024)
 
     s.close()
     # print(f"\nTotal No. of Packets sended: {cnt}")
