@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+import main_UI
 
 textfont = QFont("Times", 7)
 
@@ -9,9 +10,11 @@ textfont = QFont("Times", 7)
 class SettingsUI(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Settings")
+        self.setWindowTitle("Login Settings")
         self.setFixedSize(490, 400)
         self.UI()
+        self.main_obj = main_UI.Main()
+        self.main_obj.show()
 
     def UI(self):
         self.setting_Layouts()
@@ -21,7 +24,7 @@ class SettingsUI(QWidget):
         self.list.addItems(["Personal Information", "Directories"])
         self.list.itemClicked.connect(self.onClicked)
 
-        # ---------------------Info-------------------------------
+        # ---------------------Personal Info-------------------------------
         self.insidetopright = QFormLayout()
         # creating buttons and labels
         self.lineEdit = QLineEdit()
@@ -35,7 +38,6 @@ class SettingsUI(QWidget):
         self.change_btn.setFont(textfont)
         self.save_btn = QPushButton("Save")
         self.save_btn.setFont(textfont)
-        self.save_btn.setEnabled(False)
         self.label_username.setFont(textfont)
         self.username.setFont(textfont)
         self.username.setStyleSheet("background:white")
@@ -101,13 +103,13 @@ class SettingsUI(QWidget):
         if item.text() == "Directories":
             self.onClickDownloads()
 
-    # on clicking personalInfo---------------------------------
+    # on clicking personalInfo--------------------------------------------
 
     def onClickPersonalInfo(self):
         # Showing Widgets
         self.top_right_widget.hide()
         self.label_username.show()
-        self.username.show()
+        self.lineEdit.show()
         self.change_btn.show()
         self.save_btn.show()
         # Hidding Widgets
@@ -136,15 +138,17 @@ class SettingsUI(QWidget):
         if self.text == "":
             reply = QMessageBox.information(
                 self, "Information", "Please, Enter the username")
+            self.save_btn.setEnabled(True)
         else:
-            print("still printing")
+            print(self.text)
             self.username.setText(self.text)
             self.username.adjustSize()
             self.lineEdit.hide()
             self.username.show()
             self.lineEdit.clear()
+            self.ok_btn.setEnabled(True)
 
-    # On click Directories-----------------------------------------
+    # On click Directories--------------------------------------------------
 
     def onClickDownloads(self):
         # Showing Widgets
@@ -160,6 +164,7 @@ class SettingsUI(QWidget):
         self.username.hide()
         self.change_btn.hide()
         self.save_btn.hide()
+        self.lineEdit.hide()
 
     def onClickBrowseDown(self):
         Directory_name = QFileDialog.getExistingDirectory()
@@ -174,23 +179,32 @@ class SettingsUI(QWidget):
         print(self.upload_path)
 
     def onClickOkButton(self):
-        sys.exit()
+        if self.choose_down.text() != "Choose directory" and self.choose_upload.text() != "Choose directory":
+            sys.exit()
+
+    def closeEvent(self, event):
+        if self.ok_btn.isEnabled() == True and self.choose_down.text() != "Choose directory" and self.choose_upload.text() != "Choose directory":
+            event.accept()
+        else:
+            reply = QMessageBox.information(
+                self, "Warning", "Please, Complete")
+            event.ignore()
 
     def setting_Layouts(self):
-        # creating layouts-------------------
+        # creating layouts
         self.mainlayout = QHBoxLayout()
         self.leftlayout = QVBoxLayout()
         self.rightlayout = QVBoxLayout()
         self.toprightlayout = QVBoxLayout()
         self.bottomrightlayout = QHBoxLayout()
 
-        # add layouts to its main layout-------------
+        # add layouts to its main layout
         self.mainlayout.addLayout(self.leftlayout, 40)
         self.mainlayout.addLayout(self.rightlayout, 60)
         self.rightlayout.addLayout(self.toprightlayout)
         self.rightlayout.addLayout(self.bottomrightlayout)
 
-        # creating widgets to sub-layouts------------
+        # creating widgets
         self.list = QListWidget()
         self.list.setFont(textfont)
 
@@ -201,6 +215,7 @@ class SettingsUI(QWidget):
         self.ok_btn.setFont(textfont)
         self.ok_btn.setIcon(QIcon("images/save.jpg"))
         self.ok_btn.setIconSize(QSize(12, 12))
+        self.ok_btn.setEnabled(False)
         self.ok_btn.setStyleSheet("background:white")
         self.ok_btn.clicked.connect(self.onClickOkButton)
 
@@ -210,14 +225,13 @@ class SettingsUI(QWidget):
         self.cancel_btn.setIconSize(QSize(8, 8))
         self.cancel_btn.setStyleSheet("background:white")
 
-        self.bottomrightlayout.setContentsMargins(60, 0, 60, 0)
-        # add widgets to sub-layouts-----------------
+        # add widgets to sub-layouts
         self.leftlayout.addWidget(self.list)
         self.toprightlayout.addWidget(self.top_right_widget)
         self.bottomrightlayout.addWidget(self.ok_btn)
         self.bottomrightlayout.addWidget(self.cancel_btn)
 
-        # set layout to main layout------------------
+        # set layout to main layout
         self.setLayout(self.mainlayout)
 
 

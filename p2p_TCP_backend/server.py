@@ -1,5 +1,6 @@
 from socket import *
 import threading
+import os
 
 hostname = gethostname()
 ip = gethostbyname(hostname)
@@ -9,7 +10,7 @@ server = socket(AF_INET, SOCK_STREAM)
 server.bind(ADDR)
 server.listen()
 
-# dictionary containing key-value pairs (ip,addr) of peers
+# dictionary containing key-value pairs (username,(ip,addr)) of peers
 ip_list = {}
 client_conn = []
 
@@ -55,12 +56,23 @@ def connect_to_peers(client, username):
         peer_name = client.recv(1024).decode("utf-8")
         IP, PORT = ip_list[peer_name]
         # sending all file names to client from database
-        list_from_db = [""]
+
+        files = os.listdir(
+            "E:/Computer Network/Local-Torrent/server_data/")
+        print("Total no of files: ", len(files))
+        print(files)
+        if len(files) == 0:
+            print("This should not be")
+            list_from_db = "The server directory is empty"
+        else:
+            print("This should be")
+            list_from_db = "\n".join(f for f in files)
+
         client.send(list_from_db.encode("utf-8"))
         while True:
             file_no = int(client.recv(1024).decode("utf-8"))
             # cnt is the count of all file_name present in database
-            cnt = 10
+            cnt = len(files)
             if 1 <= file_no <= cnt:
                 client.send("{} {}".format(IP, PORT).encode("utf-8"))
                 break

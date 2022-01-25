@@ -3,6 +3,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import settings_info
+import login_typo
+# import sockets
+import server
 
 textfont = QFont("Times", 7)
 
@@ -11,6 +14,12 @@ class Main(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Local Torrent")
+        self.setGeometry(100, 40, 800, 450)
+        self.user_cnt = 0
+        self.downl_cnt = 0
+        # print(self.user_cnt)
+        # self.login_obj = login_typo.SettingsUI()
+        # self.login_obj.show()
         self.UI()
 
     def UI(self):
@@ -37,7 +46,9 @@ class Main(QMainWindow):
         self.users = QAction("Users", self)
         self.file.addAction(self.users)
         self.users.setIcon(QIcon("images/usersicon.png"))
-        self.users.triggered.connect(self.onClickUser)
+
+        if self.user_cnt == 0:
+            self.users.triggered.connect(self.onClick_User)
 
         self.settings = QAction("Settings", self)
         self.file.addAction(self.settings)
@@ -49,42 +60,73 @@ class Main(QMainWindow):
         self.exit.setIcon(QIcon("images/exiticon.jpg"))
         self.exit.triggered.connect(self.onClickExit)
 
-        self.downloads = QAction("Downloads", self)
+        self.downloads = QAction("File", self)
         self.view.addAction(self.downloads)
         self.downloads.setIcon(QIcon("images/down.ico"))
-        self.downloads.triggered.connect(self.onClickDownloads)
+        if self.downl_cnt == 0:
+            self.downloads.triggered.connect(self.onClick_Downloads)
+
+    def onClick_User(self):
+        if self.user_cnt == 0:
+            self.onClickUser()
+
+    def onClick_Downloads(self):
+        if self.downl_cnt == 0:
+            self.onClickDownloads()
 
     def onClickUser(self):
-        self.userslist = QListWidget()
+        # self.tab.removeTab(1)
+        self.user_cnt = 1
+        self.users_table = QTableWidget()
+        self.users_table.setColumnCount(3)
+        # self.users_table.setRowCount(1)
+        self.users_table.setFont(textfont)
+
+        self.users_table.setShowGrid(False)
+        self.users_table.setHorizontalHeaderItem(0, QTableWidgetItem("Name"))
+        self.users_table.setHorizontalHeaderItem(1, QTableWidgetItem("Shared"))
+        self.users_table.setHorizontalHeaderItem(2, QTableWidgetItem("IP"))
+
         # print(self.tab.currentIndex())
         # self.tab.tabBarDoubleClicked(0)
 
         self.tab_user = QWidget()
         self.tab.addTab(self.tab_user, "Users")
-        self.tab_user.setLayout(self.toplayout)
-        self.toplayout.setSpacing(0)
-        self.toplayout.addWidget(self.userslist)
-        # time.sleep(2)
-        # print(self.tab.setCurrentIndex(1))
-        # self.tab.removeTab(1)
+        self.tab_user.setLayout(self.eachtablayout)
+        self.eachtablayout.setSpacing(0)
+        self.eachtablayout.addWidget(self.users_table)
+        self.users_table.setItem(0, 0, QTableWidgetItem("username"))
+
+        username = server.users
+        ip = server.ip_list
+        print(ip)
+        # ip=ip[username[0]][0]
+        # print(ip)
+
+        if not len(username) == 0:
+            for i in (0, len(username)-1):
+                # print(username[i])
+                self.users_table.setRowCount(i+1)
+                self.users_table.setItem(
+                    i, 2, QTableWidgetItem(ip[username[i]][0]))
+                self.users_table.setItem(i, 0, QTableWidgetItem(username[i]))
 
     def onClickSettings(self):
-        self.tab_user = QWidget()
-        self.tab.addTab(self.tab_user, "Settings")
         self.setting_obj = settings_info.SettingsUI()
         self.setting_obj.show()
 
     def onClickDownloads(self):
+        self.downl_cnt = 1
         self.tab_user = QWidget()
-        self.tab.addTab(self.tab_user, "Downloads")
+        self.tab.addTab(self.tab_user, "File list")
 
     def tabs(self):
         self.tab = QTabWidget()
         self.tab.setFont(textfont)
         self.tab1 = QWidget()
-        self.tab2 = QWidget()
+        # self.tab2 = QWidget()
         self.tab.addTab(self.tab1, "Tab 1")
-        self.tab.addTab(self.tab2, "Tab 2")
+        # self.tab.addTab(self.tab2, "Tab 2")
         self.tab.setTabsClosable(True)
         self.tab.tabsClosable()
         self.tab.setMovable(True)
@@ -98,7 +140,7 @@ class Main(QMainWindow):
         self.usertable.setColumnCount(6)
         self.usertable.setRowCount(6)
 
-        self.usertable.verticalHeader().hide()
+        # self.usertable.verticalHeader().hide()
         self.usertable.setShowGrid(False)
         # self.usertable.setStyleSheet(
         #     'QTableView::item {border-bottom: 0.5px solid #d6d9dc;}')
@@ -121,23 +163,22 @@ class Main(QMainWindow):
     def layouts(self):
         # creating layouts----------------------
         self.mainlayout = QVBoxLayout()
-        self.toplayout = QVBoxLayout()
+        self.eachtablayout = QVBoxLayout()
         self.bottomlayout = QVBoxLayout()
 
         self.mainlayout.addLayout(self.bottomlayout, 40)
         self.mainlayout.setContentsMargins(0, 280, 0, 0)
-        self.list = QListWidget()
-        self.list.setFont(textfont)
-        self.list.addItem("List")
         self.mainlayout.setSpacing(0)
+        self.eachtablayout.setSpacing(0)
+        # self.list = QListWidget()
+        # self.list.setFont(textfont)
+        # self.list.addItem("List")
 
         # adding widgets in layouts------------------
-        self.tab1.setLayout(self.toplayout)
-        self.toplayout.setSpacing(0)
-        self.toplayout.addWidget(self.list)
         self.bottomlayout.addWidget(self.usertable)
 
         # set layouts inside Tab---------------------
+        self.tab1.setLayout(self.eachtablayout)
         self.tab.setLayout(self.mainlayout)
 
     def onClickExit(self):
@@ -152,6 +193,6 @@ class Main(QMainWindow):
 if __name__ == "__main__":
     win = QApplication(sys.argv)
     main = Main()
-    main.setGeometry(100, 40, 800, 450)
+    
     main.show()
     win.exec()
