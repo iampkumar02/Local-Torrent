@@ -13,8 +13,9 @@ class SettingsUI(QWidget):
         self.setWindowTitle("Login Settings")
         self.setFixedSize(490, 400)
         self.UI()
-        self.main_obj = main_UI.Main()
-        self.main_obj.show()
+        self.main_obj = main_UI.MainWindow()
+        # self.main_obj.show()
+        
 
     def UI(self):
         self.setting_Layouts()
@@ -180,11 +181,13 @@ class SettingsUI(QWidget):
 
     def onClickOkButton(self):
         if self.choose_down.text() != "Choose directory" and self.choose_upload.text() != "Choose directory":
-            sys.exit()
+            self.main_obj.show()
+            self.hide()
 
     def closeEvent(self, event):
         if self.ok_btn.isEnabled() == True and self.choose_down.text() != "Choose directory" and self.choose_upload.text() != "Choose directory":
             event.accept()
+            self.main_obj.show()
         else:
             reply = QMessageBox.information(
                 self, "Warning", "Please, Complete")
