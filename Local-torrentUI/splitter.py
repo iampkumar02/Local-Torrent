@@ -8,12 +8,14 @@ class Splitter(QWidget):
 
     def __init__(self):
         super(Splitter, self).__init__()
+        # print("Called init")
         self.initUI()
 
     def initUI(self):
+        # print("Inside initUI")
 
         hbox = QHBoxLayout(self)
-
+        self.x=10
         self.topright = QWidget()
         self.topleft = QWidget()
         self.bottom = QWidget()

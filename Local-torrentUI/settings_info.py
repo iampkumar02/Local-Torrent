@@ -105,6 +105,7 @@ class SettingsUI(QWidget):
 
     def onClickPersonalInfo(self):
         # Showing Widgets
+        self.cancel_btn.setEnabled(True)
         self.top_right_widget.hide()
         self.label_username.show()
         self.username.show()
@@ -148,6 +149,7 @@ class SettingsUI(QWidget):
 
     def onClickDownloads(self):
         # Showing Widgets
+        self.cancel_btn.setEnabled(False)
         self.top_right_widget.hide()
         self.upload_label.show()
         self.choose_upload.show()
@@ -209,6 +211,7 @@ class SettingsUI(QWidget):
         self.cancel_btn.setIcon(QIcon("images/cancel.png"))
         self.cancel_btn.setIconSize(QSize(8, 8))
         self.cancel_btn.setStyleSheet("background:white")
+        self.cancel_btn.setEnabled(False)
 
         self.bottomrightlayout.setContentsMargins(60, 0, 60, 0)
         # add widgets to sub-layouts-----------------

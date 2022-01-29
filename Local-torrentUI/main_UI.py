@@ -5,6 +5,7 @@ from PyQt5.QtGui import *
 import splitter
 import settings_info
 import server
+import chatroom.GUI as GUI
 textfont = QFont("Times", 7)
 
 
@@ -42,11 +43,21 @@ class MainWindow(QMainWindow):
         # self.tab.setStyleSheet(
         #     "border: 0 solid white")
 
-    # giving layout to the application
+# Giving layouts to the application
+
+# QWidget --> HBox --> Splitter(imort QWidget --> HBox) -->
+# Splitter(HBox) --> (HBox having 3 QWidgets --> (topright,topleft,bottom))
+
+# topleft(QWidget) --> (VBox having tab Widget)
+
+# topright(QWidget) --> VBox --> ChatRoom(import QWidget --> VBox)
+# ChatRoom(VBox) --> (VBox (contains 2 Widgets),HBox (contains 2 Widgets))
     def layouts(self):
         mainWidget = QWidget()
         self.splitter_obj = splitter.Splitter()
         hbox = QHBoxLayout()
+        y=self.splitter_obj.x
+        print(y)
         # hbox.setSpacing(0)
         self.topleft = self.splitter_obj.topleft
         self.topright = self.splitter_obj.topright
@@ -64,8 +75,11 @@ class MainWindow(QMainWindow):
         topleftlayout.setContentsMargins(0, 0, 0, 0)
         self.topleft.setLayout(topleftlayout)
 
+        self.chat_obj = GUI.ChatRoom()
+
         toprightlayout = QVBoxLayout()
         toprightlayout.setContentsMargins(0, 0, 0, 0)
+        toprightlayout.addWidget(self.chat_obj)
         self.topright.setLayout(toprightlayout)
 
         bottomlayout = QVBoxLayout()
@@ -75,18 +89,18 @@ class MainWindow(QMainWindow):
         # adding widget to three layouts
         topleftlayout.addWidget(self.tab)
 
-        chatlabel = QLabel("Group Chat")
-        chatlabel.setFont(QFont("Times", 10))
-        chatlabel.setAlignment(Qt.AlignCenter)
-        toprightlayout.addWidget(chatlabel, 10)
-        chatlabel.setStyleSheet("background: orange;font-weight: bold;")
-        chatWiget = QWidget()
-        toprightlayout.addWidget(chatWiget, 80)
-        chatWiget.setStyleSheet("background: white")
-        chattext = QLineEdit()
-        toprightlayout.addWidget(chattext, 10)
-        chattext.setPlaceholderText("Type your Message")
-        toprightlayout.setContentsMargins(0, 24, 0, 0)
+        # chatlabel = QLabel("Group Chat")
+        # chatlabel.setFont(QFont("Times", 10))
+        # chatlabel.setAlignment(Qt.AlignCenter)
+        # chatlabel.setStyleSheet("background: orange;font-weight: bold;")
+        # toprightlayout.addWidget(chatlabel, 10)
+        # chatWiget = QWidget()
+        # toprightlayout.addWidget(chatWiget, 80)
+        # chatWiget.setStyleSheet("background: white")
+        # chattext = QLineEdit()
+        # toprightlayout.addWidget(chattext, 10)
+        # chattext.setPlaceholderText("Type your Message")
+        # toprightlayout.setContentsMargins(0, 24, 0, 0)
 
         loglabel = QLabel("Connection logs")
         loglabel.setFont(QFont("Times", 8))

@@ -33,8 +33,9 @@ class SettingsUI(QWidget):
         self.lineEdit.setFont(textfont)
         self.label_username = QLabel("Username")
         self.label_username.setStyleSheet("font-weight: bold")
-        self.username = QLabel("Klaus Mikaelson")
-        self.user = self.username.text()
+        self.username = QLabel("")
+        # self.user = self.username.text()
+        # self.user="no name"
         self.change_btn = QPushButton("Change")
         self.change_btn.setFont(textfont)
         self.save_btn = QPushButton("Save")
@@ -108,9 +109,13 @@ class SettingsUI(QWidget):
 
     def onClickPersonalInfo(self):
         # Showing Widgets
+        self.cancel_btn.setEnabled(True)
         self.top_right_widget.hide()
         self.label_username.show()
-        self.lineEdit.show()
+        if self.username.text() =="":
+            self.lineEdit.show()
+        else:
+            self.username.show()
         self.change_btn.show()
         self.save_btn.show()
         # Hidding Widgets
@@ -129,9 +134,10 @@ class SettingsUI(QWidget):
         self.lineEdit.insert(self.text)
 
     def cancel_btn_clicked(self):
-        self.lineEdit.clear()
-        self.lineEdit.hide()
-        self.username.show()
+        if not self.username.text() == "":
+            self.lineEdit.clear()
+            self.lineEdit.hide()
+            self.username.show()
 
     def save_btn_clicked(self):
         self.save_btn.setEnabled(False)
@@ -153,6 +159,7 @@ class SettingsUI(QWidget):
 
     def onClickDownloads(self):
         # Showing Widgets
+        self.cancel_btn.setEnabled(False)
         self.top_right_widget.hide()
         self.upload_label.show()
         self.choose_upload.show()
@@ -227,6 +234,9 @@ class SettingsUI(QWidget):
         self.cancel_btn.setIcon(QIcon("images/cancel.png"))
         self.cancel_btn.setIconSize(QSize(8, 8))
         self.cancel_btn.setStyleSheet("background:white")
+        self.cancel_btn.setEnabled(False)
+        # blocking signals of the button
+        # self.cancel_btn.blockSignals(True)
 
         # add widgets to sub-layouts
         self.leftlayout.addWidget(self.list)
