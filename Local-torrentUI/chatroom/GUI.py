@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import *
 # import chat_client as client
 import chatroom.chat_client as client
 from main_UI import MainWindow
+import GetFiles.filesGUI as filesGUI
 
 textfont = QFont("Times", 7)
 ip_list=[]
@@ -15,6 +16,7 @@ class Worker(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(str)
     progress_cnt = pyqtSignal()
+    progress_file = pyqtSignal()
     print("DONOT PRINT THIS")
 
     def run(self):
@@ -47,6 +49,10 @@ class Worker(QObject):
                     self.progress_cnt.emit()
                     print("USER_LIST: ", username)
                     # return username
+                elif msg[0] == "FILE_LIST":
+                    print("Getting file list from server")
+                    self.progress_file.emit()
+
                 elif not msg[0] == "username?":
                     self.progress.emit(message)
 
@@ -112,6 +118,7 @@ class ChatRoom(QWidget):
         self.thread.finished.connect(self.thread.deleteLater)
         self.worker.progress.connect(self.appendMessage)
         self.worker.progress_cnt.connect(self.inc_cnt)
+        self.worker.progress_file.connect(self.getFiles)
         # self.worker.progress.connect(self.callFunction)
         self.thread.start()
     
@@ -123,9 +130,13 @@ class ChatRoom(QWidget):
             self.cntToResetTable = 0
             # self.callFunction()
 
+    def getFiles(self):
+        self.file_obj = filesGUI.Files()
+        self.file_obj.show()
+
     def callFunction(self):
-        self.thread2 = QThread()
-        self.thread2.start()
+        # self.thread2 = QThread()
+        # self.thread2.start()
         table_obj = MainWindow()
         table_obj.onClickRefresh()
 

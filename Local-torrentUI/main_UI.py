@@ -5,6 +5,8 @@ from PyQt5.QtGui import *
 import splitter
 import settings_info
 import chatroom.GUI as GUI
+import chatroom.chat_client as client
+
 textfont = QFont("Times", 7)
 
 
@@ -104,6 +106,7 @@ class MainWindow(QMainWindow):
 
     def table(self):
         self.users_table = QTableWidget()
+        self.users_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.users_table.setStyleSheet("background:white")
         self.users_table.setColumnCount(5)
 
@@ -117,6 +120,24 @@ class MainWindow(QMainWindow):
             4, QTableWidgetItem("Get File"))
 
         self.users_table.setFont(textfont)
+        self.users_table.doubleClicked.connect(self.onClickGetFile)
+        # self.getFileBtn=QPushButton(self.users_table)
+        # self.getFileBtn.setText("GET")
+        # self.getFileBtn.setStyleSheet("background-color : #87CEEB")
+
+        # self.getFileBtn.clicked.connect(self.onClickGetFile)
+        
+
+    def onClickGetFile(self):
+        self.conn = client.client
+        print("Clicked")
+        for item in self.users_table.selectedItems():
+            row=item.row()
+            col=item.column()
+            print(row,col)
+            if col==4:
+                name=self.users_table.item(row,0).text()
+                self.conn.send(f"FILE_LIST#{name}".encode('utf-8'))
 
     def onClick_User(self):
         if self.user_cnt == 0:
@@ -153,7 +174,6 @@ class MainWindow(QMainWindow):
         topuserstablelayout.addWidget(self.users_table)
         bottomuserstablelayout.addWidget(self.user_search)
         bottomuserstablelayout.addWidget(self.refresh_btn)
-        self.users_table.setItem(0, 0, QTableWidgetItem("username"))
 
         username = GUI.username
         ip = GUI.ip_list
@@ -161,6 +181,8 @@ class MainWindow(QMainWindow):
         ip=ip[0]
         username = username.split("'")[1::2]
         ip = ip.split("'")[1::2]
+        print("Main ",username)
+        print("Main ", ip)
 
         if not len(username) == 0:
             for i in (0, len(username)-1):
@@ -169,6 +191,12 @@ class MainWindow(QMainWindow):
                 self.users_table.setItem(
                     i, 2, QTableWidgetItem(ip[i]))
                 self.users_table.setItem(i, 0, QTableWidgetItem(username[i]))
+                item1 = QTableWidgetItem("GET")
+                item1.setBackground(QColor("#87CEEB"))
+                item1.setTextAlignment(Qt.AlignCenter)
+                item1.setFont(QFont("Times", 8))
+                self.users_table.setItem(i, 4, item1)
+                # self.users_table.setItem(i,4,QTableWidgetItem("GET"))
 
     def onClickRefresh(self):
         # cnt_table_row=(self.users_table.rowCount())
@@ -190,6 +218,12 @@ class MainWindow(QMainWindow):
                 self.users_table.setItem(
                     i, 2, QTableWidgetItem(ip[i]))
                 self.users_table.setItem(i, 0, QTableWidgetItem(username[i]))
+                item1 = QTableWidgetItem("GET")
+                item1.setBackground(QColor("#87CEEB"))
+                item1.setTextAlignment(Qt.AlignCenter)
+                item1.setFont(QFont("Times", 8))
+                self.users_table.setItem(i, 4, item1)
+                # self.users_table.setItem(i, 4, QTableWidgetItem("GET"))
 
 
     def onClickSettings(self):

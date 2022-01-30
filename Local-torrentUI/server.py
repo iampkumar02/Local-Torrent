@@ -39,8 +39,18 @@ def handle_client(client, name):
     while True:
         try:
             message = client.recv(1024).decode('utf-8')
-            broadcast(message, name)
-        except:
+            msg=message.split("#")
+            if msg[0] == "FILE_LIST":
+                # Get files of client_name (msg[1]) from database
+                print(f"Getting files of {msg[1]}")
+                tag = "FILE_LIST#"
+                file_list=tag+"Hello World"
+                client.send(file_list.encode('utf-8'))
+                # pass
+            else:
+                broadcast(message, name)
+        except Exception as e:
+            print("Error: ",e)
             index = client_conn.index(client)
             client_conn.remove(client)
             ip_list.pop(index)
