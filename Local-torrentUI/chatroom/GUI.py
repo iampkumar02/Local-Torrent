@@ -4,7 +4,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 # import chat_client as client
 import chatroom.chat_client as client
-from main_UI import MainWindow
+# from main_UI import MainWindow
 import GetFiles.filesGUI as filesGUI
 
 textfont = QFont("Times", 7)
@@ -137,8 +137,9 @@ class ChatRoom(QWidget):
     def callFunction(self):
         # self.thread2 = QThread()
         # self.thread2.start()
-        table_obj = MainWindow()
-        table_obj.onClickRefresh()
+        # table_obj = MainWindow()
+        # table_obj.onClickRefresh()
+        pass
 
     def onClickedSend(self):
         send_msg=self.chattext.text()

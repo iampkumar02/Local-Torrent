@@ -196,9 +196,25 @@ class SettingsUI(QWidget):
             event.accept()
             self.main_obj.show()
         else:
-            reply = QMessageBox.information(
-                self, "Warning", "Please, Complete")
+            self.showMessageBox()
             event.ignore()
+
+    def showMessageBox(self):
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Question)
+        msg.setWindowTitle('Prompt')
+        msg.setText('Please Fill the Info Before Getting to Start!')
+        Continue = msg.addButton(
+            'Continue', QMessageBox.AcceptRole)
+        abort = msg.addButton(
+            'Abort', QMessageBox.RejectRole)
+        msg.setDefaultButton(Continue)
+        msg.exec_()
+        msg.deleteLater()
+        if msg.clickedButton() is Continue:
+            print('Continue')
+        else:
+            sys.exit()
 
     def setting_Layouts(self):
         # creating layouts
