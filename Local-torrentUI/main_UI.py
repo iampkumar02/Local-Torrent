@@ -4,7 +4,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import splitter
 import settings_info
-import server
 import chatroom.GUI as GUI
 textfont = QFont("Times", 7)
 
@@ -25,8 +24,9 @@ class MainWindow(QMainWindow):
         # calling all functions
         self.menubar()
         self.tabs()
-        # self.table()
+        self.table()
         self.layouts()
+
 
     # Creating Tab Widget
     def tabs(self):
@@ -57,7 +57,7 @@ class MainWindow(QMainWindow):
         self.splitter_obj = splitter.Splitter()
         hbox = QHBoxLayout()
         y=self.splitter_obj.x
-        print(y)
+        # print(y)
         # hbox.setSpacing(0)
         self.topleft = self.splitter_obj.topleft
         self.topright = self.splitter_obj.topright
@@ -90,17 +90,6 @@ class MainWindow(QMainWindow):
         topleftlayout.addWidget(self.tab)
 
         # chatlabel = QLabel("Group Chat")
-        # chatlabel.setFont(QFont("Times", 10))
-        # chatlabel.setAlignment(Qt.AlignCenter)
-        # chatlabel.setStyleSheet("background: orange;font-weight: bold;")
-        # toprightlayout.addWidget(chatlabel, 10)
-        # chatWiget = QWidget()
-        # toprightlayout.addWidget(chatWiget, 80)
-        # chatWiget.setStyleSheet("background: white")
-        # chattext = QLineEdit()
-        # toprightlayout.addWidget(chattext, 10)
-        # chattext.setPlaceholderText("Type your Message")
-        # toprightlayout.setContentsMargins(0, 24, 0, 0)
 
         loglabel = QLabel("Connection logs")
         loglabel.setFont(QFont("Times", 8))
@@ -112,6 +101,22 @@ class MainWindow(QMainWindow):
         bottomlayout.addWidget(logcontent, 93)
 
     # ---------------------------------------------------------------------------------
+
+    def table(self):
+        self.users_table = QTableWidget()
+        self.users_table.setStyleSheet("background:white")
+        self.users_table.setColumnCount(5)
+
+        self.users_table.setShowGrid(False)
+        self.users_table.setHorizontalHeaderItem(0, QTableWidgetItem("Name"))
+        self.users_table.setHorizontalHeaderItem(1, QTableWidgetItem("Shared"))
+        self.users_table.setHorizontalHeaderItem(2, QTableWidgetItem("IP"))
+        self.users_table.setHorizontalHeaderItem(
+            3, QTableWidgetItem("Pvt. Message"))
+        self.users_table.setHorizontalHeaderItem(
+            4, QTableWidgetItem("Get File"))
+
+        self.users_table.setFont(textfont)
 
     def onClick_User(self):
         if self.user_cnt == 0:
@@ -125,49 +130,67 @@ class MainWindow(QMainWindow):
         # self.tab.removeTab(1)
         self.user_cnt = 1
         userslayout = QVBoxLayout()
+        topuserstablelayout=QVBoxLayout()
+        topuserstablelayout.setContentsMargins(0, 0, 0, 0)
+        # self.users_table = QTableWidget()
 
-        self.users_table = QTableWidget()
-
+        bottomuserstablelayout = QHBoxLayout()
+        bottomuserstablelayout.setContentsMargins(0, 0, 0, 0)
+        self.refresh_btn=QPushButton("Refresh")
+        self.refresh_btn.clicked.connect(self.onClickRefresh)
         self.user_search = QLineEdit()
+
+        userslayout.addLayout(topuserstablelayout)
+        userslayout.addLayout(bottomuserstablelayout)
+
         self.user_search.setPlaceholderText("Search user")
-        self.users_table.setStyleSheet("background:white")
-        self.users_table.setColumnCount(5)
-        # self.users_table.setRowCount(1)
-
-        self.users_table.setShowGrid(False)
-        self.users_table.setHorizontalHeaderItem(0, QTableWidgetItem("Name"))
-        self.users_table.setHorizontalHeaderItem(1, QTableWidgetItem("Shared"))
-        self.users_table.setHorizontalHeaderItem(2, QTableWidgetItem("IP"))
-        self.users_table.setHorizontalHeaderItem(
-            3, QTableWidgetItem("Pvt. Message"))
-        self.users_table.setHorizontalHeaderItem(
-            4, QTableWidgetItem("Get File"))
-
-        self.users_table.setFont(textfont)
-        # print(self.tab.currentIndex())
-        # self.tab.tabBarDoubleClicked(0)
 
         self.tab_user = QWidget()
         self.tab.addTab(self.tab_user, "Users")
         self.tab_user.setLayout(userslayout)
         userslayout.setContentsMargins(5, 0, 0, 0)
-        userslayout.addWidget(self.users_table)
-        userslayout.addWidget(self.user_search)
+
+        topuserstablelayout.addWidget(self.users_table)
+        bottomuserstablelayout.addWidget(self.user_search)
+        bottomuserstablelayout.addWidget(self.refresh_btn)
         self.users_table.setItem(0, 0, QTableWidgetItem("username"))
 
-        username = server.users
-        ip = server.ip_list
-        print(ip)
-        # ip=ip[username[0]][0]
-        # print(ip)
+        username = GUI.username
+        ip = GUI.ip_list
+        username=username[0]
+        ip=ip[0]
+        username = username.split("'")[1::2]
+        ip = ip.split("'")[1::2]
 
         if not len(username) == 0:
             for i in (0, len(username)-1):
                 # print(username[i])
                 self.users_table.setRowCount(i+1)
                 self.users_table.setItem(
-                    i, 2, QTableWidgetItem(ip[username[i]][0]))
+                    i, 2, QTableWidgetItem(ip[i]))
                 self.users_table.setItem(i, 0, QTableWidgetItem(username[i]))
+
+    def onClickRefresh(self):
+        # cnt_table_row=(self.users_table.rowCount())
+        # for i in range(cnt_table_row):
+        #     self.users_table.removeRow(i)
+        self.users_table.setRowCount(0)
+
+        username = GUI.username
+        ip = GUI.ip_list
+        username = username[0]
+        ip = ip[0]
+        username = username.split("'")[1::2]
+        ip = ip.split("'")[1::2]
+
+        if not len(username) == 0:
+            for i in (0, len(username)-1):
+                # print(username[i])
+                self.users_table.setRowCount(i+1)
+                self.users_table.setItem(
+                    i, 2, QTableWidgetItem(ip[i]))
+                self.users_table.setItem(i, 0, QTableWidgetItem(username[i]))
+
 
     def onClickSettings(self):
         self.setting_obj = settings_info.SettingsUI()
@@ -198,24 +221,29 @@ class MainWindow(QMainWindow):
         # Sub Menu Items-------------
         self.users = QAction("Users", self)
         self.file.addAction(self.users)
-        self.users.setIcon(QIcon("images/usersicon.png"))
+        # self.users.setIcon(QIcon("images/usersicon.png"))
+        self.users.setIcon(QIcon("E:\\Computer Network\\Local-Torrent\\images\\usersicon.png"))
 
         if self.user_cnt == 0:
             self.users.triggered.connect(self.onClick_User)
 
         self.settings = QAction("Settings", self)
         self.file.addAction(self.settings)
-        self.settings.setIcon(QIcon("images/settingsicon.png"))
+        # self.settings.setIcon(QIcon("images/settingsicon.png"))
+        self.settings.setIcon(
+            QIcon("E:\Computer Network\Local-Torrent\images\settingsicon.png"))
         self.settings.triggered.connect(self.onClickSettings)
 
         self.exit = QAction("Exit", self)
         self.file.addAction(self.exit)
-        self.exit.setIcon(QIcon("images/exiticon.jpg"))
+        self.exit.setIcon(
+            QIcon("E:\Computer Network\Local-Torrent\images\exiticon.jpg"))
         self.exit.triggered.connect(self.onClickExit)
 
         self.downloads = QAction("Downloads", self)
         self.view.addAction(self.downloads)
-        self.downloads.setIcon(QIcon("images/down.ico"))
+        self.downloads.setIcon(
+            QIcon("E:\Computer Network\Local-Torrent\images\down.ico"))
         if self.downl_cnt == 0:
             self.downloads.triggered.connect(self.onClick_Downloads)
 
