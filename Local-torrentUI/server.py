@@ -1,3 +1,4 @@
+from ast import In
 import threading
 import socket
 
@@ -46,17 +47,39 @@ def handle_client(client, name):
                 tag = "FILE_LIST#"
                 file_list=tag+"Hello World"
                 client.send(file_list.encode('utf-8'))
-                # pass
+                
+            elif msg[0] == "PVT_MSG":
+                client_col,msg=msg[1].split("@")
+                print(f"Sending Message {msg} to user {client_col}")
+                tag = "PVT_MSG#"
+                msg_curr = tag+f"{name}: {msg}"
+                msg_clien_col = tag+f"{client_col}: {msg}"
+
+                print(msg_curr)
+                print(msg_clien_col)
+                try:
+                    print("Index found!")
+                    index1 = users.index(name)
+                    index2 = users.index(client_col)
+                except IndexError as In:
+                    print("Index not found!",In)
+
+                
+                client_conn[index1].send(msg_curr.encode('utf-8'))
+                try:
+                    client_conn[index2].send(msg_curr.encode('utf-8'))
+                except Exception as e:
+                    print("Error (Client Not Found): ",e)
+                
             else:
                 broadcast(message, name)
+
         except Exception as e:
             print("Error: ",e)
             index = client_conn.index(client)
             client_conn.remove(client)
             ip_list.pop(index)
             
-            # client.send(f"USERNAME#{users}".encode('utf-8'))
-            # client.send(f"IP_LIST#{ip_list}".encode('utf-8'))
             name = users[index]
             broadcast(f"USERNAME#{users}",name)
             broadcast(f"IP_LIST#{ip_list}",name)

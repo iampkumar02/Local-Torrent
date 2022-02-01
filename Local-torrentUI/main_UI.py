@@ -6,6 +6,7 @@ import splitter
 import settings_info
 import chatroom.GUI as GUI
 import chatroom.chat_client as client
+import Pvt_Msg.pvt_msgGUI as msg_GUI
 
 textfont = QFont("Times", 7)
 
@@ -120,15 +121,15 @@ class MainWindow(QMainWindow):
             4, QTableWidgetItem("Get File"))
 
         self.users_table.setFont(textfont)
-        self.users_table.doubleClicked.connect(self.onClickGetFile)
+        self.users_table.doubleClicked.connect(self.onClickTableBox)
         # self.getFileBtn=QPushButton(self.users_table)
         # self.getFileBtn.setText("GET")
         # self.getFileBtn.setStyleSheet("background-color : #87CEEB")
 
-        # self.getFileBtn.clicked.connect(self.onClickGetFile)
+        # self.getFileBtn.clicked.connect(self.onClickTableBox)
         
 
-    def onClickGetFile(self):
+    def onClickTableBox(self):
         self.conn = client.client
         print("Clicked")
         for item in self.users_table.selectedItems():
@@ -138,6 +139,25 @@ class MainWindow(QMainWindow):
             if col==4:
                 name=self.users_table.item(row,0).text()
                 self.conn.send(f"FILE_LIST#{name}".encode('utf-8'))
+            if col == 3:
+                self.pvt_msg_obj = msg_GUI.PvtMessage()
+                self.pvt_msg_obj.show()
+                # self.client_msg_row=row
+                self.client_name_col = self.users_table.item(row, 0).text()
+
+                self.chatbtn1 = self.pvt_msg_obj.chatbtn
+                self.chattext1 = self.pvt_msg_obj.chattext
+                self.chatbtn1.clicked.connect(self.onClickedSend)
+                # self.conn.send(f"PVT_MSG#{name}".encode('utf-8'))
+
+    def onClickedSend(self):
+        send_msg = self.chattext1.text()
+        self.chattext1.clear()
+        send_msg = f"PVT_MSG#{self.client_name_col}@"+send_msg
+        print("I get your message!")
+        self.conn = client.client
+        self.conn.send(send_msg.encode("utf-8"))
+
 
     def onClick_User(self):
         if self.user_cnt == 0:
@@ -191,17 +211,20 @@ class MainWindow(QMainWindow):
                 self.users_table.setItem(
                     i, 2, QTableWidgetItem(ip[i]))
                 self.users_table.setItem(i, 0, QTableWidgetItem(username[i]))
+
                 item1 = QTableWidgetItem("GET")
                 item1.setBackground(QColor("#87CEEB"))
                 item1.setTextAlignment(Qt.AlignCenter)
                 item1.setFont(QFont("Times", 8))
                 self.users_table.setItem(i, 4, item1)
-                # self.users_table.setItem(i,4,QTableWidgetItem("GET"))
+
+                item2 = QTableWidgetItem("MESSAGE")
+                item2.setBackground(QColor("#f9aa33"))
+                item2.setTextAlignment(Qt.AlignCenter)
+                item2.setFont(QFont("Times", 8))
+                self.users_table.setItem(i, 3, item2)
 
     def onClickRefresh(self):
-        # cnt_table_row=(self.users_table.rowCount())
-        # for i in range(cnt_table_row):
-        #     self.users_table.removeRow(i)
         self.users_table.setRowCount(0)
 
         username = GUI.username
@@ -218,12 +241,18 @@ class MainWindow(QMainWindow):
                 self.users_table.setItem(
                     i, 2, QTableWidgetItem(ip[i]))
                 self.users_table.setItem(i, 0, QTableWidgetItem(username[i]))
+
                 item1 = QTableWidgetItem("GET")
                 item1.setBackground(QColor("#87CEEB"))
                 item1.setTextAlignment(Qt.AlignCenter)
                 item1.setFont(QFont("Times", 8))
                 self.users_table.setItem(i, 4, item1)
-                # self.users_table.setItem(i, 4, QTableWidgetItem("GET"))
+
+                item2 = QTableWidgetItem("MESSAGE")
+                item2.setBackground(QColor("#f9aa33"))
+                item2.setTextAlignment(Qt.AlignCenter)
+                item2.setFont(QFont("Times", 8))
+                self.users_table.setItem(i, 3, item2)
 
 
     def onClickSettings(self):

@@ -235,7 +235,7 @@ class SettingsUI(QWidget):
         self.list.setFont(textfont)
 
         self.top_right_widget = QWidget()
-        self.top_right_widget.setStyleSheet("background:white")
+        # self.top_right_widget.setStyleSheet("background:white")
 
         self.ok_btn = QPushButton("OK")
         self.ok_btn.setFont(textfont)

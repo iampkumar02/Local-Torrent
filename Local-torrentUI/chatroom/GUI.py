@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import *
 import chatroom.chat_client as client
 # from main_UI import MainWindow
 import GetFiles.filesGUI as filesGUI
+import Pvt_Msg.pvt_msgGUI as msg_GUI
 
 textfont = QFont("Times", 7)
 ip_list=[]
@@ -17,6 +18,7 @@ class Worker(QObject):
     progress = pyqtSignal(str)
     progress_cnt = pyqtSignal()
     progress_file = pyqtSignal()
+    progress_pvt_msg = pyqtSignal(str)
     print("DONOT PRINT THIS")
 
     def run(self):
@@ -52,6 +54,10 @@ class Worker(QObject):
                 elif msg[0] == "FILE_LIST":
                     print("Getting file list from server")
                     self.progress_file.emit()
+                
+                elif msg[0] == "PVT_MSG":
+                    print("Your current msg: ", msg[1])
+                    self.progress_pvt_msg.emit(msg[1])
 
                 elif not msg[0] == "username?":
                     self.progress.emit(message)
@@ -119,8 +125,15 @@ class ChatRoom(QWidget):
         self.worker.progress.connect(self.appendMessage)
         self.worker.progress_cnt.connect(self.inc_cnt)
         self.worker.progress_file.connect(self.getFiles)
+        # self.worker.progress_pvt_msg.connect(self.appendPvtMsg)
         # self.worker.progress.connect(self.callFunction)
         self.thread.start()
+    
+    def appendPvtMsg(self,pvt_msg):
+        print("appendPvtMsg called!!",pvt_msg)
+        self.pvt_msg_obj = msg_GUI.PvtMessage()
+        self.chatWidget1 = self.pvt_msg_obj.appendPvtMsg(pvt_msg)
+
     
     def inc_cnt(self):
         self.cntToResetTable+=1
