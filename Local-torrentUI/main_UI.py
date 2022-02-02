@@ -140,24 +140,11 @@ class MainWindow(QMainWindow):
                 name=self.users_table.item(row,0).text()
                 self.conn.send(f"FILE_LIST#{name}".encode('utf-8'))
             if col == 3:
-                self.pvt_msg_obj = msg_GUI.PvtMessage()
-                self.pvt_msg_obj.show()
-                # self.client_msg_row=row
                 self.client_name_col = self.users_table.item(row, 0).text()
-
-                self.chatbtn1 = self.pvt_msg_obj.chatbtn
-                self.chattext1 = self.pvt_msg_obj.chattext
-                self.chatbtn1.clicked.connect(self.onClickedSend)
-                # self.conn.send(f"PVT_MSG#{name}".encode('utf-8'))
-
-    def onClickedSend(self):
-        send_msg = self.chattext1.text()
-        self.chattext1.clear()
-        send_msg = f"PVT_MSG#{self.client_name_col}@"+send_msg
-        print("I get your message!")
-        self.conn = client.client
-        self.conn.send(send_msg.encode("utf-8"))
-
+                print("Opening Pvt msg Window")
+                self.conn.send(
+                    f"PVT_MSG#{self.client_name_col}@".encode('utf-8'))
+                print("NOW")
 
     def onClick_User(self):
         if self.user_cnt == 0:
@@ -195,12 +182,25 @@ class MainWindow(QMainWindow):
         bottomuserstablelayout.addWidget(self.user_search)
         bottomuserstablelayout.addWidget(self.refresh_btn)
 
+        self.myname = GUI.myname
+
         username = GUI.username
         ip = GUI.ip_list
+
         username=username[0]
         ip=ip[0]
+
         username = username.split("'")[1::2]
         ip = ip.split("'")[1::2]
+
+        # print("Before myname:",self.myname[0])
+        # print("Before name:",username)
+        # print("Before ip:",ip)
+
+        index_myname=username.index(self.myname[0])
+        username.remove(self.myname[0])
+        ip.pop(index_myname)
+
         print("Main ",username)
         print("Main ", ip)
 
@@ -229,10 +229,15 @@ class MainWindow(QMainWindow):
 
         username = GUI.username
         ip = GUI.ip_list
+
         username = username[0]
         ip = ip[0]
         username = username.split("'")[1::2]
         ip = ip.split("'")[1::2]
+
+        index_myname = username.index(self.myname[0])
+        username.remove(self.myname[0])
+        ip.pop(index_myname)
 
         if not len(username) == 0:
             for i in (0, len(username)-1):

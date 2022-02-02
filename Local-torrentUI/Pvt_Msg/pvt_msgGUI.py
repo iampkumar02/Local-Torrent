@@ -36,17 +36,16 @@ class PvtMessage(QWidget):
         self.chatlayout.addLayout(self.topchatlayout, 90)
         self.chatlayout.addLayout(self.bottomchatlayout, 10)
 
-        chatlabel = QLabel("Username")
-        chatlabel.setFont(QFont("Times", 10))
-        chatlabel.setAlignment(Qt.AlignCenter)
-        chatlabel.setStyleSheet("background: #389bd2;font-weight: bold;color:white;")
-        self.topchatlayout.addWidget(chatlabel, 12)
+        self.chatlabel = QLabel("Username")
+        self.chatlabel.setFont(QFont("Times", 10))
+        self.chatlabel.setAlignment(Qt.AlignCenter)
+        self.chatlabel.setStyleSheet("background: #389bd2;font-weight: bold;color:white;")
+        self.topchatlayout.addWidget(self.chatlabel, 12)
 
         self.chatWidget = QTextEdit()
         self.chatWidget.setReadOnly(True)
         self.chatWidget.setStyleSheet("background: white")
         self.chatWidget.setFont(textfont)
-        self.chatWidget.append("Hello")
         self.topchatlayout.addWidget(self.chatWidget, 88)
 
         self.chattext = QLineEdit()
@@ -58,25 +57,6 @@ class PvtMessage(QWidget):
         self.bottomchatlayout.addWidget(self.chatbtn)
 
         self.setLayout(self.chatlayout)
-        self.PvtChatThread()
-
-    def PvtChatThread(self):
-        # --------------Create worker thread---------------
-        # self.thread = QThread()
-        self.worker = work.Worker()
-
-    def onClickedSend(self):
-        send_msg = self.chattext.text()
-        self.chattext.clear()
-        send_msg = "PVT_MSG#"+send_msg
-        # print("I get your message!")
-        # self.conn = client.client
-        # self.conn.send(send_msg.encode("utf-8"))
-    
-    def appendPvtMsg(self, pvt_msg):
-        print("appendPvtMsg called again!!", pvt_msg)
-        # self.chatWidget.append("Hello")
-        self.chatWidget.append(pvt_msg)
 
 
 if __name__ == '__main__':

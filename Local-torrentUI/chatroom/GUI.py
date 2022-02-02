@@ -9,66 +9,59 @@ import GetFiles.filesGUI as filesGUI
 import Pvt_Msg.pvt_msgGUI as msg_GUI
 
 textfont = QFont("Times", 7)
-ip_list=[]
-username=[]
+ip_list=["user1"]
+username=["192.168.1.7"]
+myname=[]
 
 
 class Worker(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(str)
-    progress_cnt = pyqtSignal()
     progress_file = pyqtSignal()
     progress_pvt_msg = pyqtSignal(str)
     print("DONOT PRINT THIS")
 
     def run(self):
         self.conn = client.client
-        user_name=input("Enter your username: ")
-        self.conn.send(user_name.encode('utf-8'))
+        self.user_name=input("Enter your username: ")
+        myname.clear()
+        myname.append(self.user_name)
+        self.conn.send(self.user_name.encode('utf-8'))
         self.receivingFromServer()
-        # cntToResetTable = 0
 
     def receivingFromServer(self):
         while True:
             try:
                 message = self.conn.recv(1024).decode('utf-8')
                 msg=message.split("#")
-                
+
                 if msg[0] == "IP_LIST":
                     ip=msg[1]
                     ip_list.clear()
                     ip_list.append(ip)
-                    # cntToResetTable+=1
-                    self.progress_cnt.emit()
-
                     print("IP_LIST: ",ip_list)
-                    # return ip_list
+
                 elif msg[0] == "USERNAME":
                     name = msg[1]
                     username.clear()
                     username.append(name)
-                    # cntToResetTable+=1
-                    self.progress_cnt.emit()
                     print("USER_LIST: ", username)
-                    # return username
+
                 elif msg[0] == "FILE_LIST":
                     print("Getting file list from server")
                     self.progress_file.emit()
                 
                 elif msg[0] == "PVT_MSG":
-                    print("Your current msg: ", msg[1])
                     self.progress_pvt_msg.emit(msg[1])
 
                 elif not msg[0] == "username?":
                     self.progress.emit(message)
 
-            except:
-                print('Error!')
-                client.close()
+            except Exception as e:
+                print('Error!',e)
+                self.conn.close()
                 self.finished.emit()
                 break
-
-
 
 class ChatRoom(QWidget):
 
@@ -110,6 +103,16 @@ class ChatRoom(QWidget):
         chatbtn.clicked.connect(self.onClickedSend)
         self.bottomchatlayout.addWidget(chatbtn)
 
+        # -------------------Pvt Msg Layout--------------------
+
+        self.pvt_msg_obj = msg_GUI.PvtMessage()
+        self.chatbtn1 = self.pvt_msg_obj.chatbtn
+        self.chattext1 = self.pvt_msg_obj.chattext
+        self.chatlabel1= self.pvt_msg_obj.chatlabel
+        
+        self.chatbtn1.clicked.connect(self.onClickedSend1)
+        self.chatWidget1 = self.pvt_msg_obj.chatWidget
+
         self.setLayout(self.chatlayout)
         self.chatThread()
 
@@ -123,36 +126,36 @@ class ChatRoom(QWidget):
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
         self.worker.progress.connect(self.appendMessage)
-        self.worker.progress_cnt.connect(self.inc_cnt)
         self.worker.progress_file.connect(self.getFiles)
-        # self.worker.progress_pvt_msg.connect(self.appendPvtMsg)
-        # self.worker.progress.connect(self.callFunction)
+        self.worker.progress_pvt_msg.connect(self.getPvtMessage)
         self.thread.start()
     
-    def appendPvtMsg(self,pvt_msg):
-        print("appendPvtMsg called!!",pvt_msg)
-        self.pvt_msg_obj = msg_GUI.PvtMessage()
-        self.chatWidget1 = self.pvt_msg_obj.appendPvtMsg(pvt_msg)
-
-    
-    def inc_cnt(self):
-        self.cntToResetTable+=1
-        # print("Your CNT: ",self.cntToResetTable)
-        if self.cntToResetTable == 2:
-            # print("Now, Inside CNT = 2")
-            self.cntToResetTable = 0
-            # self.callFunction()
 
     def getFiles(self):
         self.file_obj = filesGUI.Files()
         self.file_obj.show()
 
-    def callFunction(self):
-        # self.thread2 = QThread()
-        # self.thread2.start()
-        # table_obj = MainWindow()
-        # table_obj.onClickRefresh()
-        pass
+# -----------------Private Messaging----------------------------
+    def getPvtMessage(self,pvt_msg):
+        if pvt_msg[0]=="@":
+            print("GUI: Opening Pvt Window")
+            self.client_name_col = pvt_msg[1:]
+            self.chatlabel1.setText(f"Messaging To: {pvt_msg[1:]}")
+            self.pvt_msg_obj.show()
+        else:
+            print("This is one time")
+            self.chatWidget1.append(pvt_msg)
+
+    def onClickedSend1(self):
+        send_msg = self.chattext1.text()
+        self.chattext1.clear()
+        send_msg = f"PVT_MSG#{self.client_name_col}@"+send_msg
+        print("Sending this msg: ",send_msg)
+        self.conn = client.client
+        self.conn.send(send_msg.encode("utf-8"))
+
+
+# -------------- Group Chat-------------------
 
     def onClickedSend(self):
         send_msg=self.chattext.text()
