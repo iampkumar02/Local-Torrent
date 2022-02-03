@@ -17,31 +17,50 @@ class Files(QWidget):
     def initUI(self):
         self.resize(550, 400)
         self.setWindowTitle("Files")
-        self.fetchFiles()
+        # self.fetchFiles()
+        self.file_table()
         self.file_layout()
 
+    def file_table(self):
+        self.fileTable = QTableWidget()
+        self.fileTable.setFont(textfont)
+        self.fileTable.setColumnCount(3)
+        self.fileTable.setHorizontalHeaderItem(
+            0, QTableWidgetItem("File name"))
+        self.fileTable.setHorizontalHeaderItem(
+            1, QTableWidgetItem("File Extension"))
+        self.fileTable.setHorizontalHeaderItem(2, QTableWidgetItem("Size"))
+
     def file_layout(self):
-        self.mainlayout = QVBoxLayout()
-        # self.search=QWidget()
+        self.filemainLayout = QVBoxLayout()
+        self.fileSearchLayout = QHBoxLayout()
+        self.allFilesLayout = QVBoxLayout()
+        self.allFilesLayout.setContentsMargins(0, 0, 0, 0)
 
-    def fetchFiles(self):
-        formats = ['.jpg', '.jpeg', '.txt']
-        self.file_list = []
-        self.extension_list = []
-        self.file_dir_list = []
+        self.downbtn = QPushButton("Download")
+        self.downbtn.setStyleSheet("color:green;font-weight: bold;")
+        self.searchGroupLayout = QGroupBox("Search Files")
+        self.searchGroupLayout.setFont(QFont("Times", 8))
+        self.searchGroupLayout.setStyleSheet("font-weight: bold")
 
-        for path, subfolders, files in os.walk(r'E:\CP'):
-            # print(path)
-            for file in files:
-                filename, extension = os.path.splitext(file)
+        self.filemainLayout.addWidget(self.searchGroupLayout)
+        self.filemainLayout.addLayout(self.allFilesLayout)
 
-                if (extension.lower() in formats):
-                    self.file_list.append(filename)
-                    self.extension_list.append(extension)
-                    f = os.path.join(path, file)
-                    self.file_dir_list.append(f)
-                    # print(f)
-        # print(self.file_dir_list)
+        self.setLayout(self.filemainLayout)
+
+        # Making searchbar for search files from the available list--------------
+        self.searchEntry = QLineEdit()
+        self.searchBtn = QPushButton("Search")
+        self.searchBtn.setStyleSheet("font-weight: normal")
+
+        self.fileSearchLayout.addWidget(self.searchEntry)
+        self.fileSearchLayout.addWidget(self.searchBtn)
+
+        self.searchGroupLayout.setLayout(self.fileSearchLayout)
+
+        # --------------Add items in table---------------
+        self.allFilesLayout.addWidget(self.fileTable)
+        self.allFilesLayout.addWidget(self.downbtn)
 
 
 if __name__ == '__main__':

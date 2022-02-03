@@ -9,14 +9,20 @@ try:
         host="localhost",
         user="root",
         passwd=os.getenv('password'),
-        database="datacamp"
+        # database="datacamp"
     )
     print("Connected to database...")
 except Exception as e:
     print("Database not connected", e)
     sys.exit()
 
+
+
 cursor = db.cursor()
+
+# cursor.execute("CREATE DATABASE datacamp")
+
+
 # cursor.execute("CREATE DATABASE datacamp")
 # cursor.execute("SHOW DATABASES")
 # databases = cursor.fetchall()

@@ -1,6 +1,27 @@
 from ast import In
 import threading
 import socket
+import sys
+import os
+from dotenv import load_dotenv
+import mysql.connector as mysql
+import time
+
+load_dotenv()
+
+try:
+    db = mysql.connect(
+        host="localhost",
+        user="root",
+        passwd=os.getenv('password'),
+        database="datacamp"
+    )
+    print("Connected to database...")
+except Exception as e:
+    print("Database not connected", e)
+    sys.exit()
+
+cursor = db.cursor()
 
 
 def connect_method():
@@ -35,6 +56,99 @@ def broadcast(message, name):
             else:
                 client.send(f"{name}: {message}".encode('utf-8'))
 
+# Here the server is sending the list of files to user by fetching it from database-------
+
+def sendingFiles(client, name, msg):
+    client_name = msg[1]
+    print(f"Getting files of {msg[1]}")
+    # Get files of client_name (msg[1]) from database
+    q_user = "SELECT file_id FROM users WHERE username=%s"
+    values_user = ('Niklaus',)
+    cursor.execute(q_user, values_user)
+    records = cursor.fetchall()
+
+    q = "SELECT * FROM uploaded_file_list WHERE id = %s"
+    values = (records[0][0],)
+
+    cursor.execute(q, values)
+    allFiles = cursor.fetchall()
+
+    tag = "FILE_LIST#"
+    # file_list = tag+f"{allFiles}"
+
+    client.send(f"{tag}@{client_name}".encode('utf-8'))
+    print("Window opened!")
+    for i in range(len(allFiles)):
+        time.sleep(1)
+        print(f"Sending file {i+1}")
+        client.send(f"{tag}FILE_NAME@{allFiles[i]}".encode('utf-8'))
+
+# Here one to one chatting can be done (Privately)------------------------------
+
+def sendingPvtMsg(client, name, msg):
+    client_col, msg = msg[1].split("@")
+    if not msg == "":
+        print("Not Opening Window from server")
+        print(f"Sending Message {msg} to user {client_col}")
+        tag = "PVT_MSG#"
+        msg_curr = tag+f"{name}: {msg}"
+        # msg_clien_col = tag+f"{client_col}: {msg}"
+
+        print(msg_curr)
+        # print(msg_clien_col)
+        try:
+            print("Index found!")
+            index2 = users.index(client_col)
+            print("index2: ", index2)
+        except IndexError as In:
+            print("Index not found!", In)
+
+        print("Sending one time to itself")
+        client.send(msg_curr.encode('utf-8'))
+        try:
+            print("Sending one time to client")
+            client_conn[index2].send(msg_curr.encode('utf-8'))
+        except Exception as e:
+            print("Error (Client Not Found): ", e)
+    else:
+        client.send(f"PVT_MSG#@{client_col}".encode('utf-8'))
+        print("Opening Pvt Window from server")
+
+# This function will get enough information for P2P file transfer from database
+# And send this info to other client------------------------------------------
+
+def downloadFile(client, name, msg):
+    # file_name,curr_username,down_dir_current_user
+    file_name, client_name = msg[1].split("@")
+    query = "SELECT file_down_dir FROM users WHERE username=%s"
+    values = ("Niklaus",)
+    cursor.execute(query, values)
+    down_dir_current_user = cursor.fetchall()
+
+    q_user = "SELECT file_id FROM users WHERE username=%s"
+    values_user = ('Niklaus',)
+    cursor.execute(q_user, values_user)
+    records = cursor.fetchall()
+
+    # Here id and file_name/dir makes composite primary key
+    client_file_dir_query = "SELECT dir FROM uploaded_file_list WHERE file_name=%s AND id=%s"
+    value1 = (file_name,records[0][0],)
+    cursor.execute(client_file_dir_query, value1)
+    upload_file_dir = cursor.fetchall()
+
+    tag = "DOWNLOAD_PORT#"
+    info = tag+upload_file_dir[0][0]+"@"+name+"@"+down_dir_current_user
+
+    try:
+        client_index = users.index(client_name)
+        client_conn[client_index].send(info.encode('utf-8'))
+    except Exception as e:
+        print("Client index not found")
+        print("Error: ",e)
+
+
+# This function will receive every message coming from each users----------------------
+# And each function inside this, using thread so that each functions execute independently
 
 def handle_client(client, name):
     while True:
@@ -42,43 +156,21 @@ def handle_client(client, name):
             message = client.recv(1024).decode('utf-8')
             msg = message.split("#")
             if msg[0] == "FILE_LIST":
-                # Get files of client_name (msg[1]) from database
-                print(f"Getting files of {msg[1]}")
-                tag = "FILE_LIST#"
-                file_list = tag+"Hello World"
-                client.send(file_list.encode('utf-8'))
-
+                file_thread = threading.Thread(
+                    target=sendingFiles, args=(client, name, msg,))
+                file_thread.start()
             elif msg[0] == "PVT_MSG":
-                client_col, msg = msg[1].split("@")
-                if not msg == "":
-                    print("Not Opening Window from server")
-                    print(f"Sending Message {msg} to user {client_col}")
-                    tag = "PVT_MSG#"
-                    msg_curr = tag+f"{name}: {msg}"
-                    # msg_clien_col = tag+f"{client_col}: {msg}"
-
-                    print(msg_curr)
-                    # print(msg_clien_col)
-                    try:
-                        print("Index found!")
-                        index2 = users.index(client_col)
-                        print("index2: ",index2)
-                    except IndexError as In:
-                        print("Index not found!", In)
-
-                    print("Sending one time to itself")
-                    client.send(msg_curr.encode('utf-8'))
-                    try:
-                        print("Sending one time to client")
-                        client_conn[index2].send(msg_curr.encode('utf-8'))
-                    except Exception as e:
-                        print("Error (Client Not Found): ", e)
-                else:
-                    client.send(f"PVT_MSG#@{client_col}".encode('utf-8'))
-                    print("Opening Pvt Window from server")
-
+                pvt_msg_thread = threading.Thread(
+                    target=sendingPvtMsg, args=(client, name, msg,))
+                pvt_msg_thread.start()
+            elif msg[0] == "DOWNLOAD":
+                down_file_thread = threading.Thread(
+                    target=downloadFile, args=(client, name,msg))
+                down_file_thread.start()
             else:
-                broadcast(message, name)
+                broadcast_thread = threading.Thread(
+                    target=broadcast, args=(message, name,))
+                broadcast_thread.start()
 
         except Exception as e:
             print("Error: ", e)
@@ -87,12 +179,13 @@ def handle_client(client, name):
             ip_list.pop(index)
 
             name = users[index]
-            broadcast(f"USERNAME#{users}", name)
-            broadcast(f"IP_LIST#{ip_list}", name)
 
             client.close()
             print(f'{name} has left the chat room!')
             users.remove(name)
+
+            broadcast(f"USERNAME#{users}", name)
+            broadcast(f"IP_LIST#{ip_list}", name)
             break
 
 
@@ -110,10 +203,9 @@ def Main():
         client_conn.append(client)
         print(f'{name} is connected now!')
 
-        broadcast(f"USERNAME#{users}",name)
-        broadcast(f"IP_LIST#{ip_list}",name)
-        # broadcast(f'has connected to the chat room',name)
-        # client.send('you are now connected!'.encode('utf-8'))
+        broadcast(f"USERNAME#{users}", name)
+        broadcast(f"IP_LIST#{ip_list}", name)
+
         thread = threading.Thread(target=handle_client, args=(client, name,))
         thread.start()
 

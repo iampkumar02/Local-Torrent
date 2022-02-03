@@ -7,18 +7,22 @@ import chatroom.chat_client as client
 # from main_UI import MainWindow
 import GetFiles.filesGUI as filesGUI
 import Pvt_Msg.pvt_msgGUI as msg_GUI
+from socket import *
 
 textfont = QFont("Times", 7)
-ip_list=["user1"]
-username=["192.168.1.7"]
+ip_list = ["192.168.1.7"]
+username = ["user1"]
 myname=[]
+cnt_file=-1
 
 
 class Worker(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(str)
-    progress_file = pyqtSignal()
-    progress_pvt_msg = pyqtSignal(str)
+    file_progress = pyqtSignal(str)
+    pvt_msg_progress = pyqtSignal(str)
+    download_progress = pyqtSignal(str)
+    
     print("DONOT PRINT THIS")
 
     def run(self):
@@ -49,10 +53,15 @@ class Worker(QObject):
 
                 elif msg[0] == "FILE_LIST":
                     print("Getting file list from server")
-                    self.progress_file.emit()
+                    self.file_progress.emit(msg[1])
                 
                 elif msg[0] == "PVT_MSG":
-                    self.progress_pvt_msg.emit(msg[1])
+                    self.pvt_msg_progress.emit(msg[1])
+
+                elif msg[0] == "DOWNLOAD_PORT":
+                    print("Connecting to downloading port: ",msg[1])
+                    print("Sending...")
+                    self.download_progress.emit(msg[1])
 
                 elif not msg[0] == "username?":
                     self.progress.emit(message)
@@ -126,14 +135,59 @@ class ChatRoom(QWidget):
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
         self.worker.progress.connect(self.appendMessage)
-        self.worker.progress_file.connect(self.getFiles)
-        self.worker.progress_pvt_msg.connect(self.getPvtMessage)
+        self.worker.file_progress.connect(self.getFiles)
+        self.worker.pvt_msg_progress.connect(self.getPvtMessage)
+        self.worker.download_progress.connect(self.sendingFileToDownload)
         self.thread.start()
-    
 
-    def getFiles(self):
-        self.file_obj = filesGUI.Files()
-        self.file_obj.show()
+    # Sending file to another user by establishing via another socket(P2P)
+
+    def sendingFileToDownload(self,info):
+        upload_file_dir, receiver_name,receiver_dir=info.split("@")
+        index = username.index(receiver_name)
+        receiver_ip=ip_list[index]
+        receiver_port=14000
+        down_socket=socket(AF_INET, SOCK_STREAM)
+        down_socket.connect((receiver_ip, receiver_port))
+        print("Connection has been established for sending file!")
+
+    # Getting all file list of selected user and displaying on new window
+
+    def getFiles(self,file_items):
+        global cnt_file
+        cnt_file+=1
+        if file_items[0]=="@":
+            self.client_name=file_items[1:]
+            cnt_file=-1
+            self.file_obj = filesGUI.Files()
+            self.file_obj.show()
+        else:
+            file_items = file_items.split("'")[1::2]
+            # print(file_items)
+            file_dir,file_name,file_size=file_items
+            file_ext=file_dir.split(".")
+            file_ext=file_ext[-1]
+            self.fileTable=self.file_obj.fileTable
+            self.downbtn = self.file_obj.downbtn
+            self.downbtn.clicked.connect(self.onClickDownBtn)
+
+            self.fileTable.setRowCount(cnt_file+1)
+            # print(file_dir,file_name,file_size)
+            self.fileTable.setItem(cnt_file, 0, QTableWidgetItem(file_name))
+            self.fileTable.setItem(cnt_file, 1, QTableWidgetItem(file_ext.upper()))
+            self.fileTable.setItem(cnt_file, 2, QTableWidgetItem(file_size))
+
+    def onClickDownBtn(self):
+        self.conn = client.client
+        print("Download Button Clicked")
+        for item in self.fileTable.selectedItems():
+            row = item.row()
+            col = item.column()
+            print(item.text(),row, col)
+            tag = "DOWNLOAD#"
+            info = tag+item.text()+"@"+self.client_name
+            self.conn.send(info.encode("utf-8"))
+
 
 # -----------------Private Messaging----------------------------
     def getPvtMessage(self,pvt_msg):
