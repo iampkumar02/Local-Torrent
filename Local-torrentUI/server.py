@@ -78,7 +78,7 @@ def sendingFiles(client, name, msg):
 
     client.send(f"{tag}@{client_name}".encode('utf-8'))
     print("Window opened!")
-    for i in range(len(allFiles)):
+    for i in range(len(allFiles)-15):
         time.sleep(1)
         print(f"Sending file {i+1}")
         client.send(f"{tag}FILE_NAME@{allFiles[i]}".encode('utf-8'))
@@ -119,32 +119,47 @@ def sendingPvtMsg(client, name, msg):
 
 def downloadFile(client, name, msg):
     # file_name,curr_username,down_dir_current_user
+    print("Info: ",msg[1])
     file_name, client_name = msg[1].split("@")
-    query = "SELECT file_down_dir FROM users WHERE username=%s"
-    values = ("Niklaus",)
-    cursor.execute(query, values)
-    down_dir_current_user = cursor.fetchall()
-
-    q_user = "SELECT file_id FROM users WHERE username=%s"
-    values_user = ('Niklaus',)
-    cursor.execute(q_user, values_user)
-    records = cursor.fetchall()
-
-    # Here id and file_name/dir makes composite primary key
-    client_file_dir_query = "SELECT dir FROM uploaded_file_list WHERE file_name=%s AND id=%s"
-    value1 = (file_name,records[0][0],)
-    cursor.execute(client_file_dir_query, value1)
-    upload_file_dir = cursor.fetchall()
-
-    tag = "DOWNLOAD_PORT#"
-    info = tag+upload_file_dir[0][0]+"@"+name+"@"+down_dir_current_user
+    # print("File Name: ",file_name)
+    try:
+        query = "SELECT file_down_dir FROM users WHERE username=%s"
+        values = ("Niklaus",)
+        cursor.execute(query, values)
+        down_dir_current_user = cursor.fetchall()
+        print("Rec1: ", down_dir_current_user)
+    except Exception as e:
+        print("Unable to find file_down_dir: ",e)
 
     try:
-        client_index = users.index(client_name)
-        client_conn[client_index].send(info.encode('utf-8'))
+        q_user = "SELECT file_id FROM users WHERE username=%s"
+        values_user = ('Niklaus',)
+        cursor.execute(q_user, values_user)
+        records = cursor.fetchall()
+        print("Rec2: ", records)
     except Exception as e:
-        print("Client index not found")
-        print("Error: ",e)
+        print("Unable to find file_id: ",e)
+
+    # Here id and file_name/dir makes composite primary key
+    try:
+        client_file_dir_query = "SELECT dir FROM uploaded_file_list WHERE file_name=%s AND id=%s"
+        value1 = (file_name,records[0][0],)
+        cursor.execute(client_file_dir_query, value1)
+        upload_file_dir = cursor.fetchall()
+
+        tag = "DOWNLOAD_PORT#"
+        info = tag+upload_file_dir[0][0]+"@"+name+"@"+down_dir_current_user[0][0]
+        print("Sending Info: ",info)
+
+        try:
+            client_name=client_name[0:3]
+            client_index = users.index(client_name)
+            client_conn[client_index].send(info.encode('utf-8'))
+        except Exception as e:
+            print("Client index not found")
+            print("Error: ",e)
+    except Exception as e:
+        print("Unable to find uploaded file dir: ",e)
 
 
 # This function will receive every message coming from each users----------------------
@@ -167,6 +182,7 @@ def handle_client(client, name):
                 down_file_thread = threading.Thread(
                     target=downloadFile, args=(client, name,msg))
                 down_file_thread.start()
+                down_file_thread.join()
             else:
                 broadcast_thread = threading.Thread(
                     target=broadcast, args=(message, name,))

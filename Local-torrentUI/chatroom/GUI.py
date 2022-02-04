@@ -143,12 +143,16 @@ class ChatRoom(QWidget):
     # Sending file to another user by establishing via another socket(P2P)
 
     def sendingFileToDownload(self,info):
+        print(info)
         upload_file_dir, receiver_name,receiver_dir=info.split("@")
-        index = username.index(receiver_name)
-        receiver_ip=ip_list[index]
+        try:
+            index = username.index(receiver_name)
+            receiver_ip=ip_list[index]
+        except Exception as e:
+            print("Unable to find receiver: ",e)
         receiver_port=14000
-        down_socket=socket(AF_INET, SOCK_STREAM)
-        down_socket.connect((receiver_ip, receiver_port))
+        # down_socket=socket(AF_INET, SOCK_STREAM)
+        # down_socket.connect((receiver_ip, receiver_port))
         print("Connection has been established for sending file!")
 
     # Getting all file list of selected user and displaying on new window
@@ -186,7 +190,9 @@ class ChatRoom(QWidget):
             print(item.text(),row, col)
             tag = "DOWNLOAD#"
             info = tag+item.text()+"@"+self.client_name
+            print("Info: ",info)
             self.conn.send(info.encode("utf-8"))
+            print("Sucessfully sended info to server")
 
 
 # -----------------Private Messaging----------------------------
