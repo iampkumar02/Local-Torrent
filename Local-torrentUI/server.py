@@ -152,7 +152,7 @@ def downloadFile(client, name, msg):
         print("Sending Info: ",info)
 
         try:
-            client_name=client_name[0:3]
+            # client_name=client_name[0:3]
             client_index = users.index(client_name)
             client_conn[client_index].send(info.encode('utf-8'))
         except Exception as e:

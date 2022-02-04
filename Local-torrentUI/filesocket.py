@@ -5,8 +5,9 @@ import chatroom.chat_client as client
 # socket for file transfer
 def file_socket():
     while True:
-        hostname_file = gethostname()
-        ip_file = gethostbyname(hostname_file)
+        # hostname_file = gethostname()
+        # ip_file = gethostbyname(hostname_file)
+        ip_file="localhost"
         port_file = 14000
         server_file = socket(AF_INET, SOCK_STREAM)
         server_file.bind((ip_file, port_file))
@@ -16,4 +17,5 @@ def file_socket():
         print("Connection established to download")
         
 
-file_socket()
+file_thread= threading.Thread(target=file_socket,args=())
+file_thread.start()

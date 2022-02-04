@@ -8,6 +8,7 @@ import chatroom.chat_client as client
 import GetFiles.filesGUI as filesGUI
 import Pvt_Msg.pvt_msgGUI as msg_GUI
 from socket import *
+import filesocket
 
 textfont = QFont("Times", 7)
 ip_list = ["192.168.1.7"]
@@ -143,17 +144,22 @@ class ChatRoom(QWidget):
     # Sending file to another user by establishing via another socket(P2P)
 
     def sendingFileToDownload(self,info):
-        print(info)
         upload_file_dir, receiver_name,receiver_dir=info.split("@")
         try:
-            index = username.index(receiver_name)
-            receiver_ip=ip_list[index]
+            user = username[0].split("'")[1::2]
+            ip_ls = ip_list[0].split("'")[1::2]
+            index = user.index(receiver_name)
+            receiver_ip = ip_ls[index]
+            print("Receiver IP: ",receiver_ip)
         except Exception as e:
             print("Unable to find receiver: ",e)
         receiver_port=14000
-        # down_socket=socket(AF_INET, SOCK_STREAM)
-        # down_socket.connect((receiver_ip, receiver_port))
-        print("Connection has been established for sending file!")
+        try:
+            down_socket=socket(AF_INET, SOCK_STREAM)
+            down_socket.connect((receiver_ip, receiver_port))
+            print("Connection has been established for sending file!")
+        except Exception as e:
+            print("Unable to connect receiver: ",e)
 
     # Getting all file list of selected user and displaying on new window
 
@@ -165,15 +171,15 @@ class ChatRoom(QWidget):
             cnt_file=-1
             self.file_obj = filesGUI.Files()
             self.file_obj.show()
+            self.fileTable = self.file_obj.fileTable
+            self.downbtn = self.file_obj.downbtn
+            self.downbtn.clicked.connect(self.onClickDownBtn)
         else:
             file_items = file_items.split("'")[1::2]
             # print(file_items)
             file_dir,file_name,file_size=file_items
             file_ext=file_dir.split(".")
             file_ext=file_ext[-1]
-            self.fileTable=self.file_obj.fileTable
-            self.downbtn = self.file_obj.downbtn
-            self.downbtn.clicked.connect(self.onClickDownBtn)
 
             self.fileTable.setRowCount(cnt_file+1)
             # print(file_dir,file_name,file_size)
