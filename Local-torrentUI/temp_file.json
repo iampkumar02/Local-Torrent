@@ -15,6 +15,10 @@
         {
             "username": "daemon",
             "count": 50000
+        },
+        {
+            "username": "iam",
+            "count": 0
         }
     ]
 }
