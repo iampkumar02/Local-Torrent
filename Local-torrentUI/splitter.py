@@ -31,7 +31,7 @@ class Splitter(QWidget):
         splitter2 = QSplitter(Qt.Vertical)
         splitter2.addWidget(splitter1)
         splitter2.addWidget(self.bottom)
-        splitter2.setSizes([70, 30])
+        splitter2.setSizes([60, 40])
 
         hbox.addWidget(splitter2)
         # to remove outside margins

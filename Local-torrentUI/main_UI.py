@@ -167,6 +167,7 @@ class MainWindow(QMainWindow):
         self.refresh_btn=QPushButton("Refresh")
         self.refresh_btn.clicked.connect(self.onClickRefresh)
         self.user_search = QLineEdit()
+        self.user_search.textChanged.connect(self.update_display)
 
         userslayout.addLayout(topuserstablelayout)
         userslayout.addLayout(bottomuserstablelayout)
@@ -224,6 +225,15 @@ class MainWindow(QMainWindow):
                 item2.setFont(QFont("Times", 8))
                 self.users_table.setItem(i, 3, item2)
 
+    def update_display(self,text):
+        rowCount = self.users_table.rowCount()
+        for row in range(rowCount):
+            if text.lower() in self.users_table.item(row, 0).text().lower():
+                self.users_table.showRow(row)
+            else:
+                self.users_table.hideRow(row)
+            
+
     def onClickRefresh(self):
         self.users_table.setRowCount(0)
 
@@ -259,6 +269,7 @@ class MainWindow(QMainWindow):
                 item2.setFont(QFont("Times", 8))
                 self.users_table.setItem(i, 3, item2)
 
+        # self.users_table.hideRow(0)
 
     def onClickSettings(self):
         self.setting_obj = settings_info.SettingsUI()

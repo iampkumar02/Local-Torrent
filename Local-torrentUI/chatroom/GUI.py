@@ -164,6 +164,9 @@ class ChatRoom(QWidget):
             down_socket.connect((receiver_ip, receiver_port))
             print("Connection has been established for sending file!")
 
+            down_socket.send(f"{upload_file_dir}@{receiver_dir}".encode("utf-8"))
+            print("First Sended!", f"{upload_file_dir}@{receiver_dir}")
+
             FORMAT = "utf-8"
             SIZE = 1024
             user=receiver_name
@@ -190,22 +193,18 @@ class ChatRoom(QWidget):
 
             data = f"{FILENAME}@{FILESIZE}"
             down_socket.send(data.encode(FORMAT))
-            # msg = down_socket.recv(SIZE).decode(FORMAT)
-            # print(f"SERVER: {msg}")
+            print("Second Sended! ",data)
             cnt = 0
             data_size = FILESIZE/1024
-            print("FILESIZE: ", data_size)
+            # print("FILESIZE: ", data_size)
 
             down_socket.send(f"{data_size}".encode(FORMAT))
+            print("Third Sended data_size! ",data_size)
             """ Data transfer. """
             bar = tqdm(range(FILESIZE), f"Sending long.txt",
                     unit="B", unit_scale=True, unit_divisor=SIZE)
 
             with open("E:\Computer Network\Local-torrent\server_data\share.txt", "r") as f:
-                # data_size=len(f.read())/1024
-                # down_socket.send(f"{data_size}".encode(FORMAT))
-                # print(type(data_size))
-                # print(f"Data size: {data_size}")
                 g = open('temp_file.json')
                 data = json.load(g)
                 v = 0
@@ -250,7 +249,6 @@ class ChatRoom(QWidget):
             # print(f"\nTotal No. of Packets sended: {cnt}")
             # print("total packets: sended: ", cnt_size)
 
-
         except Exception as e:
             print("Unable to connect receiver: ",e)
 
@@ -266,7 +264,9 @@ class ChatRoom(QWidget):
             self.file_obj.show()
             self.fileTable = self.file_obj.fileTable
             self.downbtn = self.file_obj.downbtn
+            self.searchbar = self.file_obj.searchEntry
             self.downbtn.clicked.connect(self.onClickDownBtn)
+            self.searchbar.textChanged.connect(self.update_display)
         else:
             file_items = file_items.split("'")[1::2]
             # print(file_items)
@@ -279,6 +279,15 @@ class ChatRoom(QWidget):
             self.fileTable.setItem(cnt_file, 0, QTableWidgetItem(file_name))
             self.fileTable.setItem(cnt_file, 1, QTableWidgetItem(file_ext.upper()))
             self.fileTable.setItem(cnt_file, 2, QTableWidgetItem(file_size))
+
+    def update_display(self, text):
+        rowCount = self.fileTable.rowCount()
+        for row in range(rowCount):
+            if text.lower() in self.fileTable.item(row, 0).text().lower():
+                # widget.show()
+                self.fileTable.showRow(row)
+            else:
+                self.fileTable.hideRow(row)
 
     def onClickDownBtn(self):
         self.conn = client.client

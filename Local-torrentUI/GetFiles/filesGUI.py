@@ -50,11 +50,12 @@ class Files(QWidget):
 
         # Making searchbar for search files from the available list--------------
         self.searchEntry = QLineEdit()
-        self.searchBtn = QPushButton("Search")
-        self.searchBtn.setStyleSheet("font-weight: normal")
+        self.searchEntry.setStyleSheet("font-weight: normal")
+        # self.searchBtn = QPushButton("Search")
+        # self.searchBtn.setStyleSheet("font-weight: normal")
 
         self.fileSearchLayout.addWidget(self.searchEntry)
-        self.fileSearchLayout.addWidget(self.searchBtn)
+        # self.fileSearchLayout.addWidget(self.searchBtn)
 
         self.searchGroupLayout.setLayout(self.fileSearchLayout)
 
