@@ -1,6 +1,5 @@
 from socket import *
 import threading
-import chatroom.chat_client as client
 from tqdm import tqdm
 import json
 

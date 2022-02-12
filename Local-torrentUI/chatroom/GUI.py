@@ -8,10 +8,11 @@ import chatroom.chat_client as client
 import GetFiles.filesGUI as filesGUI
 import Pvt_Msg.pvt_msgGUI as msg_GUI
 from socket import *
-import filesocket
+# import filesocket
 from tqdm import tqdm
 import json
 import os
+import time
 
 textfont = QFont("Times", 7)
 ip_list = ["192.168.1.7"]
@@ -164,8 +165,6 @@ class ChatRoom(QWidget):
             down_socket.connect((receiver_ip, receiver_port))
             print("Connection has been established for sending file!")
 
-            down_socket.send(f"{upload_file_dir}@{receiver_dir}".encode("utf-8"))
-            print("First Sended!", f"{upload_file_dir}@{receiver_dir}")
 
             FORMAT = "utf-8"
             SIZE = 1024
@@ -190,16 +189,21 @@ class ChatRoom(QWidget):
                     file_data["users"].append(j)
                     file.seek(0)
                     json.dump(file_data, file, indent=4)
-
-            data = f"{FILENAME}@{FILESIZE}"
-            down_socket.send(data.encode(FORMAT))
-            print("Second Sended! ",data)
+            try:
+                down_socket.send(f"{upload_file_dir}@{receiver_dir}".encode("utf-8"))
+                print("First Sended!", f"{upload_file_dir}@{receiver_dir}")
+            except Exception as e:
+                print("First not sended")
+            time.sleep(1)
+            try:
+                # data = FILESIZE
+                down_socket.send(f"{FILESIZE}".encode(FORMAT))
+                print("Second Sended! ", FILESIZE)
+            except Exception as e:
+                print("Second not sended")
+            time.sleep(1)
             cnt = 0
-            data_size = FILESIZE/1024
-            # print("FILESIZE: ", data_size)
 
-            down_socket.send(f"{data_size}".encode(FORMAT))
-            print("Third Sended data_size! ",data_size)
             """ Data transfer. """
             bar = tqdm(range(FILESIZE), f"Sending long.txt",
                     unit="B", unit_scale=True, unit_divisor=SIZE)

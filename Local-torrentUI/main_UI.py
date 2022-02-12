@@ -6,21 +6,109 @@ import splitter
 import settings_info
 import chatroom.GUI as GUI
 import chatroom.chat_client as client
-import Pvt_Msg.pvt_msgGUI as msg_GUI
+
+from socket import *
+from tqdm import tqdm
+import json
 
 textfont = QFont("Times", 7)
+pause_click = False
+
+
+class Worker(QThread):
+
+    progress = pyqtSignal()
+    createTableRow = pyqtSignal(str, int)
+    progressbar = pyqtSignal(int, int, int)
+    disablebtn = pyqtSignal()
+
+    def run(self):
+        print("inside run fun()")
+        self.file_socket()
+
+    # socket for file transfer
+
+    def file_socket(self):
+        ip_file = "localhost"
+        port_file = 14000
+        server_file = socket(AF_INET, SOCK_STREAM)
+        server_file.bind((ip_file, port_file))
+        server_file.listen()
+        while True:
+            # hostname_file = gethostname()
+            # ip_file = gethostbyname(hostname_file)
+            print("Waiting for new connection...")
+            file_conn, file_addr = server_file.accept()
+            self.progress.emit()
+            print("Connection established to download")
+            self.multi_down(file_conn)
+
+    def multi_down(self, file_conn):
+        # receiving data from other peer
+        global pause_click
+        main_rec = file_conn.recv(1024).decode("utf-8")
+        file_dir, down_dir = main_rec.split("@")
+        file_name = file_dir.split("\\")[-1]
+        print("First Received file_name and down_dir", main_rec)
+
+        file_data = file_conn.recv(1024).decode('utf-8')
+        FILESIZE = int(file_data)
+        print("Second Received File Size: ", FILESIZE)
+
+        self.createTableRow.emit(file_name, FILESIZE)
+
+        """ Data transfer """
+        bar = tqdm(range(FILESIZE), f"Receiving long.txt",
+                   unit="B", unit_scale=True, unit_divisor=1024)
+        cnt_size = 0
+        with open(f"E:\Computer Network\Local-torrent\client_data\\{file_name}", "w") as f:
+            g = open('E:\Computer Network\Local-Torrent\\temp_file.json')
+            data = json.load(g)
+            v = 0
+            for i in data['users']:
+                name = i['username']
+                if name == "iam":
+                    v = i['count']
+                    f.seek(v)
+                    break
+            j = 0
+            while j < v/1024:
+                j += 1
+                bar.update(1024)
+
+            g.close()
+            while True:
+                cnt_size += 1
+                try:
+                    data = file_conn.recv(1024).decode("utf-8")
+                except Exception as e:
+                    print("Failed to receive packets.")
+                if pause_click:
+                    return
+                if not data:
+                    break
+
+                f.write(data)
+                perc = (cnt_size*1024/FILESIZE)*100
+                perc = int(round(perc))
+
+                bar.update(len(data))
+                self.progressbar.emit(perc, cnt_size, FILESIZE)
+        self.disablebtn.emit()
+        file_conn.close()
 
 
 class MainWindow(QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-        # self.resize(550, 400)
         self.setWindowTitle("Local Torrent")
         self.setGeometry(100, 40, 800, 450)
 
         self.user_cnt = 0
         self.downl_cnt = 0
+        self.no_of_downloads = 0
+
         self.UI()
 
     def UI(self):
@@ -28,10 +116,116 @@ class MainWindow(QMainWindow):
         self.menubar()
         self.tabs()
         self.table()
+        self.fileThread()
         self.layouts()
 
+    def fileThread(self):
+        # --------------Create worker thread---------------
+        self.worker = Worker()
+        self.worker.start()
+        self.worker.progress.connect(self.onClick_Downloads)
+        self.worker.createTableRow.connect(self.createDownloadTableRow)
+        self.worker.progressbar.connect(self.changeInProgressBar)
+        self.worker.disablebtn.connect(self.disableDownlBtn)
+
+    def disableDownlBtn(self):
+        self.pausePlay.setEnabled(False)
+        self.pausePlay.setText("Completed")
+        self.pausePlay.setStyleSheet("background:#555d50;color:white")
+        self.canceldownlbtn.setEnabled(False)
+        self.canceldownlbtn.setText("Downloaded")
+        self.canceldownlbtn.setStyleSheet("background:#555d50;color:white")
+
+    def changeInProgressBar(self, perc, cnt_size, size):
+        item = QTableWidgetItem(f"{round(cnt_size/1024)}/{round(size/(1024*1024))} MB")
+        item.setTextAlignment(Qt.AlignCenter)
+        self.downl_table.setItem(self.no_of_downloads - 1, 4, item)
+        self.pbar.setValue(perc)
+
+    def clickPausePlay(self):
+        global pause_click
+        if self.pausePlay.text() == "Pause":
+            pause_click = True
+            self.pausePlay.setText("Resume")
+        else:
+            self.pausePlay.setText("Pause")
+
+    def createDownloadTableRow(self, fname, size):
+        print("Size: ", size)
+        self.pbar = QProgressBar()
+        # self.pbar.setValue(80)
+        self.pausePlay = QPushButton("Pause")
+        self.canceldownlbtn = QPushButton("Cancel")
+        print("Buttons Created")
+        self.pausePlay.setStyleSheet("background:#6495ed;color:white")
+        self.pausePlay.clicked.connect(self.clickPausePlay)
+        self.canceldownlbtn.setStyleSheet("background:#a0522d;color:white")
+
+        self.pbar.setStyleSheet("QProgressBar"
+                                "{"
+                                "min-height: 7px"
+                                "max-height: 7px"
+                                "border-radius: 10px"
+                                "}")
+
+        self.pbar.setTextVisible(False)
+        self.downl_table.setRowCount(self.no_of_downloads+1)
+        self.downl_table.setItem(
+            self.no_of_downloads, 0, QTableWidgetItem(fname))
+        self.downl_table.setCellWidget(self.no_of_downloads, 1,
+                                       self.pbar)
+
+        self.downl_table.setCellWidget(self.no_of_downloads, 2,
+                                       self.pausePlay)
+        self.downl_table.setCellWidget(self.no_of_downloads, 3,
+                                       self.canceldownlbtn)
+
+        item = QTableWidgetItem(f"{round(size/(1024*1024))} MB")
+        item.setTextAlignment(Qt.AlignCenter)
+        self.downl_table.setItem(
+            self.no_of_downloads, 4, item)
+        # self.downl_table.setItem(
+        #     self.no_of_downloads, 5, QTableWidgetItem("Speed"))
+        print("Row Added")
+        self.no_of_downloads += 1
+
+    def onClickDownloads(self):
+        self.downl_cnt = 1
+        self.tab_down = QWidget()
+
+        self.downl_table = QTableWidget()
+        self.downl_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.downl_table.setStyleSheet("background:white")
+        self.downl_table.setColumnCount(5)
+        self.downl_table.setShowGrid(False)
+
+        self.downl_table.setHorizontalHeaderItem(
+            0, QTableWidgetItem("File Name"))
+        self.downl_table.setHorizontalHeaderItem(
+            1, QTableWidgetItem("Progress"))
+        self.downl_table.setHorizontalHeaderItem(
+            2, QTableWidgetItem("Pause/Resume"))
+        self.downl_table.setHorizontalHeaderItem(
+            3, QTableWidgetItem("Cancel"))
+        self.downl_table.setHorizontalHeaderItem(
+            4, QTableWidgetItem("Size"))
+        # self.downl_table.setHorizontalHeaderItem(
+        #     5, QTableWidgetItem("Speed"))
+
+        header = self.downl_table.horizontalHeader()
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+
+        self.downl_table.setFont(textfont)
+        self.maindownlayout = QVBoxLayout()
+        self.maindownlayout.addWidget(self.downl_table)
+        self.maindownlayout.setContentsMargins(3, 0, 0, 0)
+
+        self.tab_down.setLayout(self.maindownlayout)
+
+        self.tab.addTab(self.tab_down, "Downloads")
 
     # Creating Tab Widget
+
     def tabs(self):
         self.tab = QTabWidget()
         self.tab.setFont(textfont)
@@ -59,7 +253,7 @@ class MainWindow(QMainWindow):
         mainWidget = QWidget()
         self.splitter_obj = splitter.Splitter()
         hbox = QHBoxLayout()
-        y=self.splitter_obj.x
+        y = self.splitter_obj.x
         # print(y)
         # hbox.setSpacing(0)
         self.topleft = self.splitter_obj.topleft
@@ -127,17 +321,16 @@ class MainWindow(QMainWindow):
         # self.getFileBtn.setStyleSheet("background-color : #87CEEB")
 
         # self.getFileBtn.clicked.connect(self.onClickTableBox)
-        
 
     def onClickTableBox(self):
         self.conn = client.client
         print("Clicked")
         for item in self.users_table.selectedItems():
-            row=item.row()
-            col=item.column()
-            print(row,col)
-            if col==4:
-                name=self.users_table.item(row,0).text()
+            row = item.row()
+            col = item.column()
+            print(row, col)
+            if col == 4:
+                name = self.users_table.item(row, 0).text()
                 self.conn.send(f"FILE_LIST#{name}".encode('utf-8'))
             if col == 3:
                 self.client_name_col = self.users_table.item(row, 0).text()
@@ -158,13 +351,13 @@ class MainWindow(QMainWindow):
         # self.tab.removeTab(1)
         self.user_cnt = 1
         userslayout = QVBoxLayout()
-        topuserstablelayout=QVBoxLayout()
+        topuserstablelayout = QVBoxLayout()
         topuserstablelayout.setContentsMargins(0, 0, 0, 0)
         # self.users_table = QTableWidget()
 
         bottomuserstablelayout = QHBoxLayout()
         bottomuserstablelayout.setContentsMargins(0, 0, 0, 0)
-        self.refresh_btn=QPushButton("Refresh")
+        self.refresh_btn = QPushButton("Refresh")
         self.refresh_btn.clicked.connect(self.onClickRefresh)
         self.user_search = QLineEdit()
         self.user_search.textChanged.connect(self.update_display)
@@ -188,8 +381,8 @@ class MainWindow(QMainWindow):
         username = GUI.username
         ip = GUI.ip_list
 
-        username=username[0]
-        ip=ip[0]
+        username = username[0]
+        ip = ip[0]
 
         username = username.split("'")[1::2]
         ip = ip.split("'")[1::2]
@@ -198,11 +391,11 @@ class MainWindow(QMainWindow):
         # print("Before name:",username)
         # print("Before ip:",ip)
 
-        index_myname=username.index(self.myname[0])
+        index_myname = username.index(self.myname[0])
         username.remove(self.myname[0])
         ip.pop(index_myname)
 
-        print("Main ",username)
+        print("Main ", username)
         print("Main ", ip)
 
         if not len(username) == 0:
@@ -225,14 +418,13 @@ class MainWindow(QMainWindow):
                 item2.setFont(QFont("Times", 8))
                 self.users_table.setItem(i, 3, item2)
 
-    def update_display(self,text):
+    def update_display(self, text):
         rowCount = self.users_table.rowCount()
         for row in range(rowCount):
             if text.lower() in self.users_table.item(row, 0).text().lower():
                 self.users_table.showRow(row)
             else:
                 self.users_table.hideRow(row)
-            
 
     def onClickRefresh(self):
         self.users_table.setRowCount(0)
@@ -275,14 +467,8 @@ class MainWindow(QMainWindow):
         self.setting_obj = settings_info.SettingsUI()
         self.setting_obj.show()
 
-    def onClickDownloads(self):
-        self.downl_cnt = 1
-        self.tab_user = QWidget()
-        self.tab.addTab(self.tab_user, "Downloads")
-
 
 # -------------------------Menu-Bar----------------------------------------------------
-
 
     def menubar(self):
         # Menu Bar-------------
@@ -301,7 +487,8 @@ class MainWindow(QMainWindow):
         self.users = QAction("Users", self)
         self.file.addAction(self.users)
         # self.users.setIcon(QIcon("images/usersicon.png"))
-        self.users.setIcon(QIcon("E:\\Computer Network\\Local-Torrent\\images\\usersicon.png"))
+        self.users.setIcon(
+            QIcon("E:\\Computer Network\\Local-Torrent\\images\\usersicon.png"))
 
         if self.user_cnt == 0:
             self.users.triggered.connect(self.onClick_User)
@@ -333,6 +520,7 @@ class MainWindow(QMainWindow):
             sys.exit()
         else:
             pass
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
