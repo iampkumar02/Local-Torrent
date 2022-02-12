@@ -14,6 +14,7 @@ import json
 textfont = QFont("Times", 7)
 pause_click = False
 
+downlpauseconn=[]
 
 class Worker(QThread):
 
@@ -29,6 +30,7 @@ class Worker(QThread):
     # socket for file transfer
 
     def file_socket(self):
+        global downlpauseconn
         ip_file = "localhost"
         port_file = 14000
         server_file = socket(AF_INET, SOCK_STREAM)
@@ -39,6 +41,8 @@ class Worker(QThread):
             # ip_file = gethostbyname(hostname_file)
             print("Waiting for new connection...")
             file_conn, file_addr = server_file.accept()
+            downlpauseconn.clear()
+            downlpauseconn.append(file_conn)
             self.progress.emit()
             print("Connection established to download")
             self.multi_down(file_conn)
@@ -72,9 +76,10 @@ class Worker(QThread):
                     f.seek(v)
                     break
             j = 0
-            while j < v/1024:
-                j += 1
-                bar.update(1024)
+            # while j < v/1024:
+            #     j += 1
+                # bar.update(1024)
+
 
             g.close()
             while True:
@@ -82,9 +87,9 @@ class Worker(QThread):
                 try:
                     data = file_conn.recv(1024).decode("utf-8")
                 except Exception as e:
-                    print("Failed to receive packets.")
-                if pause_click:
-                    return
+                    print("Failed to receive packets: ",e)
+                    break
+
                 if not data:
                     break
 
@@ -94,7 +99,12 @@ class Worker(QThread):
 
                 bar.update(len(data))
                 self.progressbar.emit(perc, cnt_size, FILESIZE)
+
         self.disablebtn.emit()
+        print("Total Packets(KB) Received: ",cnt_size)
+        print("FILESIZE in bytes: ",FILESIZE)
+        print("FILESIZE in KB: ",round(FILESIZE/1024))
+        print("FILESIZE in MB: ",round(FILESIZE/(1024*1024)))
         file_conn.close()
 
 
@@ -103,7 +113,7 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setWindowTitle("Local Torrent")
-        self.setGeometry(100, 40, 800, 450)
+        self.setGeometry(100, 40, 800, 400)
 
         self.user_cnt = 0
         self.downl_cnt = 0
@@ -144,16 +154,25 @@ class MainWindow(QMainWindow):
 
     def clickPausePlay(self):
         global pause_click
+        global downlpauseconn
         if self.pausePlay.text() == "Pause":
             pause_click = True
-            self.pausePlay.setText("Resume")
+            try:
+                downlpauseconn[0].send("PAUSEDOWNLOADING".encode("utf-8"))
+                self.pausePlay.setText("Resume")
+            except Exception as e:
+                print("Error on doing Pause: ",e)
+            print("\nClicked Pause")
         else:
-            self.pausePlay.setText("Pause")
+            try:
+                downlpauseconn[0].send("STARTDOWNLOADING".encode("utf-8"))
+                self.pausePlay.setText("Pause")
+            except Exception as e:
+                print("Error on doing Resume: ", e)
+            print("\nClicked Resume")
 
     def createDownloadTableRow(self, fname, size):
-        print("Size: ", size)
         self.pbar = QProgressBar()
-        # self.pbar.setValue(80)
         self.pausePlay = QPushButton("Pause")
         self.canceldownlbtn = QPushButton("Cancel")
         print("Buttons Created")
@@ -229,9 +248,9 @@ class MainWindow(QMainWindow):
     def tabs(self):
         self.tab = QTabWidget()
         self.tab.setFont(textfont)
-        self.tab1 = QWidget()
+        # self.tab1 = QWidget()
         # self.tab2 = QWidget()
-        self.tab.addTab(self.tab1, "Tab 1")
+        # self.tab.addTab(self.tab1, "Tab 1")
         # self.tab.addTab(self.tab2, "Tab 2")
         self.tab.setTabsClosable(True)
         self.tab.tabsClosable()
@@ -288,11 +307,11 @@ class MainWindow(QMainWindow):
 
         # chatlabel = QLabel("Group Chat")
 
-        loglabel = QLabel("Connection logs")
-        loglabel.setFont(QFont("Times", 8))
-        loglabel.setAlignment(Qt.AlignCenter)
-        loglabel.setStyleSheet("font-weight: bold;")
-        bottomlayout.addWidget(loglabel, 7)
+        # loglabel = QLabel("Connection logs")
+        # loglabel.setFont(QFont("Times", 8))
+        # loglabel.setAlignment(Qt.AlignCenter)
+        # loglabel.setStyleSheet("font-weight: bold;")
+        # bottomlayout.addWidget(loglabel, 7)
         logcontent = QWidget()
         logcontent.setStyleSheet("background: white;")
         bottomlayout.addWidget(logcontent, 93)
@@ -478,10 +497,6 @@ class MainWindow(QMainWindow):
         self.file.setFont(textfont)
         self.view = self.mb.addMenu("View")
         self.view.setFont(textfont)
-        self.windows = self.mb.addMenu("Window")
-        self.windows.setFont(textfont)
-        self.help = self.mb.addMenu("Help")
-        self.help.setFont(textfont)
 
         # Sub Menu Items-------------
         self.users = QAction("Users", self)
