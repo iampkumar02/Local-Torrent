@@ -13,6 +13,7 @@ import json
 
 textfont = QFont("Times", 7)
 pause_click = False
+cancel_clicked = False
 
 downlpauseconn=[]
 
@@ -31,6 +32,7 @@ class Worker(QThread):
 
     def file_socket(self):
         global downlpauseconn
+        global cancel_clicked
         ip_file = "localhost"
         port_file = 14000
         server_file = socket(AF_INET, SOCK_STREAM)
@@ -41,6 +43,7 @@ class Worker(QThread):
             # ip_file = gethostbyname(hostname_file)
             print("Waiting for new connection...")
             file_conn, file_addr = server_file.accept()
+            cancel_clicked = False
             downlpauseconn.clear()
             downlpauseconn.append(file_conn)
             self.progress.emit()
@@ -50,6 +53,7 @@ class Worker(QThread):
     def multi_down(self, file_conn):
         # receiving data from other peer
         global pause_click
+        global cancel_clicked
         main_rec = file_conn.recv(1024).decode("utf-8")
         file_dir, down_dir = main_rec.split("@")
         file_name = file_dir.split("\\")[-1]
@@ -92,6 +96,9 @@ class Worker(QThread):
 
                 if not data:
                     break
+                if cancel_clicked:
+                    file_conn.close()
+                    return
 
                 f.write(data)
                 perc = (cnt_size*1024/FILESIZE)*100
@@ -171,6 +178,18 @@ class MainWindow(QMainWindow):
                 print("Error on doing Resume: ", e)
             print("\nClicked Resume")
 
+    def clickCancelDownlBtn(self):
+        global downlpauseconn
+        global cancel_clicked
+        try:
+            downlpauseconn[0].send("CANCELDOWNLOADING".encode("utf-8"))
+            cancel_clicked = True
+            self.downl_table.setRowCount(self.no_of_downloads - 1)
+            self.no_of_downloads -= 1
+        except Exception as e:
+            print("Error on doing Pause: ",e)
+        print("\nClicked Cancel")
+
     def createDownloadTableRow(self, fname, size):
         self.pbar = QProgressBar()
         self.pausePlay = QPushButton("Pause")
@@ -179,6 +198,7 @@ class MainWindow(QMainWindow):
         self.pausePlay.setStyleSheet("background:#6495ed;color:white")
         self.pausePlay.clicked.connect(self.clickPausePlay)
         self.canceldownlbtn.setStyleSheet("background:#a0522d;color:white")
+        self.canceldownlbtn.clicked.connect(self.clickCancelDownlBtn)
 
         self.pbar.setStyleSheet("QProgressBar"
                                 "{"

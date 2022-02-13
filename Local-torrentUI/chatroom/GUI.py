@@ -23,6 +23,7 @@ cnt_file = -1
 pause_click = False
 thread_kill = False
 db_name_chk = []
+cancel_click = False
 
 
 class Worker(QObject):
@@ -174,11 +175,11 @@ class ChatRoom(QWidget):
             self.down_socket.connect((receiver_ip, receiver_port))
             print("Connection has been established for sending file!")
 
-            # self.receiveWorker = ReceivingPauseResume()
-            # self.receiveWorker.start()
-            # self.receiveWorker.receiving.connect(self.receivingConn)
             global thread_kill
+            global cancel_click
             thread_kill = False
+            cancel_click = False
+
 
             thread = threading.Thread(target=self.receivingConn, args=())
             thread.start()
@@ -236,6 +237,7 @@ class ChatRoom(QWidget):
         cnt = 0
         SIZE = 1024
         global pause_click
+        global cancel_click
         c=0
 
         with open("E:\Computer Network\Local-torrent\server_data\share.txt", "r") as f:
@@ -272,6 +274,9 @@ class ChatRoom(QWidget):
 
                     if pause_click:
                         return cnt_size
+                    if cancel_click:
+                        self.down_socket.close()
+                        return
 
                     self.down_socket.send(data.encode("utf-8"))
                     self.bar.update(len(data))
@@ -307,10 +312,13 @@ class ChatRoom(QWidget):
                 print("This except")
                 data = self.down_socket.recv(1024).decode("utf-8")
                 global pause_click
+                global cancel_click
                 print("Receiving while downloading: ", data)
                 if data == "PAUSEDOWNLOADING":
                     print("Pause EXECUTED")
                     pause_click = True
+                elif data == "CANCELDOWNLOADING":
+                    cancel_click = True
                 else:
                     print("Resume EXECUTED")
                     pause_click = False
