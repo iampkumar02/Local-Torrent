@@ -162,6 +162,30 @@ def downloadFile(client, name, msg):
         print("Unable to find uploaded file dir: ",e)
 
 
+def databaseNameCheck(client, name, msg):
+    try:
+        query_name = "SELECT username FROM users"
+        # values_name = ("Niklaus",)
+        cursor.execute(query_name)
+        db_names = cursor.fetchall()
+        print("NAMES: ", db_names)
+
+        name_already=False
+        tag = "DATABASECHECK#"
+        for n in db_names:
+            print(n[0])
+            if n[0] == msg[1]:
+                name_already=True
+                client.send(f"{tag}Username already exists".encode('utf-8'))
+                break
+        if not name_already:
+            client.send(f"{tag}All OK".encode('utf-8'))       
+
+    except Exception as e:
+        print("Unable to find file_down_dir: ", e)
+
+
+
 # This function will receive every message coming from each users----------------------
 # And each function inside this, using thread so that each functions execute independently
 
@@ -183,6 +207,10 @@ def handle_client(client, name):
                     target=downloadFile, args=(client, name,msg))
                 down_file_thread.start()
                 down_file_thread.join()
+            elif msg[0] == 'DATABASECHECK':
+                database_check_name_thread = threading.Thread(target=databaseNameCheck, args=(client, name, msg,))
+                database_check_name_thread.start()
+                database_check_name_thread.join()
             else:
                 broadcast_thread = threading.Thread(
                     target=broadcast, args=(message, name,))
@@ -213,6 +241,14 @@ def Main():
         print(f'connection is established with {str(address)}')
         client.send('username?'.encode('utf-8'))
         name = client.recv(1024).decode("utf-8")
+        # check_name=name.split("#")
+        # print("NAME: ",check_name)
+
+        # if check_name[0] == 'DATABASECHECK':
+        #     print("Working!!")
+        #     tag = "DATABASECHECK#"
+        #     client.send(f"{tag}database msg!".encode('utf-8'))
+
         ip_list.append(address)
         # Sending ip_list to client
         users.append(name)

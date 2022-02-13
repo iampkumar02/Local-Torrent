@@ -9,7 +9,7 @@ try:
         host="localhost",
         user="root",
         passwd=os.getenv('password'),
-        # database="datacamp"
+        database="datacamp"
     )
     print("Connected to database...")
 except Exception as e:
@@ -17,8 +17,8 @@ except Exception as e:
     sys.exit()
 
 
-
 cursor = db.cursor()
+
 
 # cursor.execute("CREATE DATABASE datacamp")
 
@@ -38,6 +38,5 @@ cursor = db.cursor()
 
 # cursor.execute("SHOW TABLES")
 
-## 'DESC table_name' is used to get all columns information
+# 'DESC table_name' is used to get all columns information
 # cursor.execute("DESC users")
-

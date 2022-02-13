@@ -2,7 +2,10 @@ import sys
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+import chatroom.chat_client as client
 import main_UI
+import time
+import chatroom.GUI as GUI
 
 textfont = QFont("Times", 7)
 
@@ -148,12 +151,24 @@ class SettingsUI(QWidget):
             self.save_btn.setEnabled(True)
         else:
             print(self.text)
+            self.conn= client.client
+            self.conn.send(f"DATABASECHECK#{self.text}".encode('utf-8'))
             self.username.setText(self.text)
             self.username.adjustSize()
-            self.lineEdit.hide()
-            self.username.show()
-            self.lineEdit.clear()
-            self.ok_btn.setEnabled(True)
+            
+            time.sleep(1)
+            gui_obj = GUI.db_name_chk
+            print(gui_obj[0])
+            if gui_obj[0] == "Username already exists":
+                response = QMessageBox.information(self,"Information", "Username already exists")
+                self.save_btn.setEnabled(True)
+                self.lineEdit.clear()
+            else:
+                self.lineEdit.hide()
+                self.username.show()
+                self.lineEdit.clear()
+                self.ok_btn.setEnabled(True)
+
 
     # On click Directories--------------------------------------------------
 

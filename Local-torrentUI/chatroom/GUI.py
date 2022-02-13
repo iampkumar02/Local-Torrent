@@ -22,6 +22,7 @@ myname = []
 cnt_file = -1
 pause_click = False
 thread_kill = False
+db_name_chk = []
 
 
 class Worker(QObject):
@@ -72,6 +73,11 @@ class Worker(QObject):
                     print("Connecting to downloading port: ", msg[1])
                     print("Sending...")
                     self.download_progress.emit(msg[1])
+
+                elif msg[0] == "DATABASECHECK":
+                    # print("Inside DATABASECHECK: ", msg[1])
+                    db_name_chk.clear()
+                    db_name_chk.append(msg[1])
 
                 elif not msg[0] == "username?":
                     self.progress.emit(message)

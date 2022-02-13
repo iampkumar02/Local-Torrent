@@ -1,2 +1,1 @@
-ef sendingPvtMsg(client, name, msg):
-    client_c
+print(f'{name} is connected now!')
