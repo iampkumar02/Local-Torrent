@@ -10,6 +10,7 @@ import chatroom.chat_client as client
 from socket import *
 from tqdm import tqdm
 import json
+import os
 
 textfont = QFont("Times", 7)
 pause_click = False
@@ -26,7 +27,7 @@ class Worker(QThread):
 
     def run(self):
         print("inside run fun()")
-        self.file_socket()
+        # self.file_socket()
 
     # socket for file transfer
 
@@ -522,8 +523,11 @@ class MainWindow(QMainWindow):
         self.users = QAction("Users", self)
         self.file.addAction(self.users)
         # self.users.setIcon(QIcon("images/usersicon.png"))
+        path = os.getcwd()
+        parent = os.path.dirname(path)
+        # print(dirname)
         self.users.setIcon(
-            QIcon("E:\\Computer Network\\Local-Torrent\\images\\usersicon.png"))
+            QIcon(f"{parent}\\images\\usersicon.png"))
 
         if self.user_cnt == 0:
             self.users.triggered.connect(self.onClick_User)
@@ -532,19 +536,19 @@ class MainWindow(QMainWindow):
         self.file.addAction(self.settings)
         # self.settings.setIcon(QIcon("images/settingsicon.png"))
         self.settings.setIcon(
-            QIcon("E:\Computer Network\Local-Torrent\images\settingsicon.png"))
+            QIcon(f"{parent}\images\settingsicon.png"))
         self.settings.triggered.connect(self.onClickSettings)
 
         self.exit = QAction("Exit", self)
         self.file.addAction(self.exit)
         self.exit.setIcon(
-            QIcon("E:\Computer Network\Local-Torrent\images\exiticon.jpg"))
+            QIcon(f"{parent}\images\exiticon.jpg"))
         self.exit.triggered.connect(self.onClickExit)
 
         self.downloads = QAction("Downloads", self)
         self.view.addAction(self.downloads)
         self.downloads.setIcon(
-            QIcon("E:\Computer Network\Local-Torrent\images\down.ico"))
+            QIcon(f"{parent}\images\down.ico"))
         if self.downl_cnt == 0:
             self.downloads.triggered.connect(self.onClick_Downloads)
 

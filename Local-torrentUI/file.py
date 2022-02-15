@@ -29,7 +29,8 @@ class Files(QWidget):
         self.extension_list=[]
         self.file_dir_list=[]
         
-        for path, subfolders, files in os.walk(r'E:\CP'):
+        p = "E:\CP"
+        for path, subfolders, files in os.walk(f'{p}'):
             # print(path)
             for file in files:
                 filename, extension = os.path.splitext(file)

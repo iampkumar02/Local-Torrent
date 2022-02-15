@@ -6,6 +6,7 @@ import chatroom.chat_client as client
 import main_UI
 import time
 import chatroom.GUI as GUI
+import os
 
 textfont = QFont("Times", 7)
 
@@ -18,7 +19,6 @@ class SettingsUI(QWidget):
         self.UI()
         self.main_obj = main_UI.MainWindow()
         # self.main_obj.show()
-        
 
     def UI(self):
         self.setting_Layouts()
@@ -115,7 +115,7 @@ class SettingsUI(QWidget):
         self.cancel_btn.setEnabled(True)
         self.top_right_widget.hide()
         self.label_username.show()
-        if self.username.text() =="":
+        if self.username.text() == "":
             self.lineEdit.show()
         else:
             self.username.show()
@@ -151,24 +151,25 @@ class SettingsUI(QWidget):
             self.save_btn.setEnabled(True)
         else:
             print(self.text)
-            self.conn= client.client
+            self.conn = client.client
             self.conn.send(f"DATABASECHECK#{self.text}".encode('utf-8'))
             self.username.setText(self.text)
             self.username.adjustSize()
-            
+
             time.sleep(1)
             gui_obj = GUI.db_name_chk
             print(gui_obj[0])
             if gui_obj[0] == "Username already exists":
-                response = QMessageBox.information(self,"Information", "Username already exists")
+                response = QMessageBox.information(
+                    self, "Information", "Username already exists")
                 self.save_btn.setEnabled(True)
+                self.ok_btn.setEnabled(False)
                 self.lineEdit.clear()
             else:
                 self.lineEdit.hide()
                 self.username.show()
                 self.lineEdit.clear()
                 self.ok_btn.setEnabled(True)
-
 
     # On click Directories--------------------------------------------------
 
@@ -201,13 +202,84 @@ class SettingsUI(QWidget):
         self.choose_upload.setText(self.upload_path)
         print(self.upload_path)
 
+    def fetchFiles(self,data):
+        formats = ['.jpg', '.jpeg', '.txt']
+        file_list = []
+        extension_list = []
+        file_dir_list = []
+        sizes = []
+
+        for path, subfolders, files in os.walk(f'{self.choose_upload.text()}'):
+            # print(path)
+            for file in files:
+                filename, extension = os.path.splitext(file)
+
+                if (extension.lower() in formats):
+                    file_list.append(filename)
+                    extension_list.append(extension)
+                    f = os.path.join(path, file)
+                    file_dir_list.append(f)
+                    file_size = os.path.getsize(f)
+                    s = 1024
+                    if file_size < s*s:
+                        r = (f"{round(file_size/s,2)} KB")
+                        sizes.append(r)
+                    elif file_size < s*s*s:
+                        r = f"{round(file_size/(s*s),2)} MB"
+                        sizes.append(r)
+                    else:
+                        r = f"{round(file_size/(s*s*s),2)} GB"
+                        sizes.append(r)
+
+        alldata = f"{data}@{file_dir_list}${file_list}${sizes}"
+        print(len(alldata))
+        print(len(alldata)/900)
+        int_no = int(len(alldata)/900)
+
+        tag = "DATABASEINSERT#"
+        start_loop = "DATABASEINSERT#START"
+        end_loop = "DATABASEINSERT#END"
+        self.conn.send(start_loop.encode("utf-8"))
+
+        if len(alldata)/900 == int_no:
+            # print("Yes")
+            j = 0
+            for i in range(int_no):
+                print("\nType is Integer")
+                print(f"{tag}{alldata[j:j+900]}")
+                time.sleep(.5)
+                self.conn.send(f"{tag}{alldata[j:j+900]}".encode('utf-8'))
+                j += 900
+        else:
+            j = 0
+            for i in range(int_no+1):
+                print("\nType is float")
+                print(alldata[j:j+900])
+                time.sleep(.5)
+                self.conn.send(f"{tag}{alldata[j:j+900]}".encode('utf-8'))
+                j += 900
+        time.sleep(.5)
+        self.conn.send(end_loop.encode("utf-8"))
+
+    def sendingInfoToServer(self):
+        print("Download Dir: ", self.choose_down.text())
+        print("Upload Dir: ", self.choose_upload.text())
+        print("Username: ", self.username.text())
+        
+        data = self.username.text()+"@"+self.choose_down.text() + \
+            "@"+self.choose_upload.text()
+        # self.conn.send(data.encode("utf-8"))
+        self.fetchFiles(data)
+
     def onClickOkButton(self):
         if self.choose_down.text() != "Choose directory" and self.choose_upload.text() != "Choose directory":
+            self.sendingInfoToServer()
             self.main_obj.show()
             self.hide()
 
     def closeEvent(self, event):
         if self.ok_btn.isEnabled() == True and self.choose_down.text() != "Choose directory" and self.choose_upload.text() != "Choose directory":
+            self.sendingInfoToServer()
             event.accept()
             self.main_obj.show()
         else:
