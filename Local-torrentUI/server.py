@@ -62,26 +62,33 @@ def sendingFiles(client, name, msg):
     client_name = msg[1]
     print(f"Getting files of {msg[1]}")
     # Get files of client_name (msg[1]) from database
-    q_user = "SELECT file_id FROM users WHERE username=%s"
-    values_user = ('Niklaus',)
-    cursor.execute(q_user, values_user)
-    records = cursor.fetchall()
+    try:
+        q_user = "SELECT file_id FROM users WHERE username=%s"
+        values_user = (client_name,)
+        cursor.execute(q_user, values_user)
+        records = cursor.fetchall()
+    except Exception as e:
+        print("Unable to find file_id: ",e)
 
-    q = "SELECT * FROM uploaded_file_list WHERE id = %s"
-    values = (records[0][0],)
+    try:
+        q = "SELECT * FROM uploaded_file_list WHERE id = %s"
+        values = (records[0][0],)
 
-    cursor.execute(q, values)
-    allFiles = cursor.fetchall()
+        cursor.execute(q, values)
+        allFiles = cursor.fetchall()
 
-    tag = "FILE_LIST#"
-    # file_list = tag+f"{allFiles}"
+        tag = "FILE_LIST#"
+        # file_list = tag+f"{allFiles}"
 
-    client.send(f"{tag}@{client_name}".encode('utf-8'))
-    print("Window opened!")
-    for i in range(len(allFiles)-15):
-        time.sleep(1)
-        print(f"Sending file {i+1}")
-        client.send(f"{tag}FILE_NAME@{allFiles[i]}".encode('utf-8'))
+        client.send(f"{tag}@{client_name}".encode('utf-8'))
+        print("Window opened!")
+        for i in range(len(allFiles)):
+            time.sleep(1)
+            print(f"Sending file {i+1}")
+            client.send(f"{tag}FILE_NAME@{allFiles[i]}".encode('utf-8'))
+            
+    except Exception as e:
+        print("Unable to find uploaded_file_list: ",e)
 
 # Here one to one chatting can be done (Privately)------------------------------
 
@@ -124,7 +131,7 @@ def downloadFile(client, name, msg):
     # print("File Name: ",file_name)
     try:
         query = "SELECT file_down_dir FROM users WHERE username=%s"
-        values = ("Niklaus",)
+        values = (client_name,)
         cursor.execute(query, values)
         down_dir_current_user = cursor.fetchall()
         print("Rec1: ", down_dir_current_user)
@@ -133,7 +140,7 @@ def downloadFile(client, name, msg):
 
     try:
         q_user = "SELECT file_id FROM users WHERE username=%s"
-        values_user = ('Niklaus',)
+        values_user = (client_name,)
         cursor.execute(q_user, values_user)
         records = cursor.fetchall()
         print("Rec2: ", records)
@@ -162,7 +169,7 @@ def downloadFile(client, name, msg):
         print("Unable to find uploaded file dir: ",e)
 
 
-def databaseNameCheck(client, name, msg):
+def databaseNameCheck(client, msg):
     try:
         query_name = "SELECT username FROM users"
         # values_name = ("Niklaus",)
@@ -176,10 +183,10 @@ def databaseNameCheck(client, name, msg):
             print(n[0])
             if n[0] == msg[1]:
                 name_already=True
-                client.send(f"{tag}Username already exists".encode('utf-8'))
+                client.send(f"{tag}Username already exists@{msg[1]}".encode('utf-8'))
                 break
         if not name_already:
-            client.send(f"{tag}All OK".encode('utf-8'))       
+            client.send(f"{tag}All OK@{msg[1]}".encode('utf-8'))
 
     except Exception as e:
         print("Unable to find file_down_dir: ", e)
@@ -233,15 +240,23 @@ def insertIntoDatabase(client, name, msg):
 # And each function inside this, using thread so that each functions execute independently
 
 def handle_client(client,address):
+    while True:
+        name = client.recv(1024).decode("utf-8")
+        if name == "BREAK":
+            print("Loop is broken")
+            break
+        check_name=name.split("#")
+        print("NAME: ",check_name)
+
+        if check_name[0] == 'DATABASECHECK':
+            print("Working!!")
+            database_check_name_thread = threading.Thread(
+                target=databaseNameCheck, args=(client, check_name,))
+            database_check_name_thread.start()
+            database_check_name_thread.join()
+
     client.send('username?'.encode('utf-8'))
     name = client.recv(1024).decode("utf-8")
-    # check_name=name.split("#")
-    # print("NAME: ",check_name)
-
-    # if check_name[0] == 'DATABASECHECK':
-    #     print("Working!!")
-    #     tag = "DATABASECHECK#"
-    #     client.send(f"{tag}database msg!".encode('utf-8'))
 
     ip_list.append(address)
     # Sending ip_list to client
@@ -273,7 +288,7 @@ def handle_client(client,address):
                 down_file_thread.start()
                 down_file_thread.join()
             elif msg[0] == 'DATABASECHECK':
-                database_check_name_thread = threading.Thread(target=databaseNameCheck, args=(client, name, msg,))
+                database_check_name_thread = threading.Thread(target=databaseNameCheck, args=(client, msg,))
                 database_check_name_thread.start()
                 database_check_name_thread.join()
             elif msg[0] == 'DATABASEINSERT':

@@ -1,0 +1,16 @@
+DROP DATABASE datacamp
+CREATE DATABASE datacamp
+USE datacamp
+CREATE TABLE users(
+    username TEXT,
+    file_down_dir TEXT,
+    file_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    UNIQUE(file_id)
+)
+CREATE TABLE uploaded_file_list(
+    id INT,
+    dir TEXT,
+    file_name TEXT,
+    file_size TEXT,
+    FOREIGN KEY(id) REFERENCES users(file_id)
+)

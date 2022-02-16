@@ -158,7 +158,7 @@ class SettingsUI(QWidget):
 
             time.sleep(1)
             gui_obj = GUI.db_name_chk
-            print(gui_obj[0])
+            print("Login_typo: ",gui_obj[0])
             if gui_obj[0] == "Username already exists":
                 response = QMessageBox.information(
                     self, "Information", "Username already exists")
@@ -273,12 +273,14 @@ class SettingsUI(QWidget):
 
     def onClickOkButton(self):
         if self.choose_down.text() != "Choose directory" and self.choose_upload.text() != "Choose directory":
+            self.conn.send("BREAK".encode("utf-8"))
             self.sendingInfoToServer()
             self.main_obj.show()
             self.hide()
 
     def closeEvent(self, event):
         if self.ok_btn.isEnabled() == True and self.choose_down.text() != "Choose directory" and self.choose_upload.text() != "Choose directory":
+            self.conn.send("BREAK".encode("utf-8"))
             self.sendingInfoToServer()
             event.accept()
             self.main_obj.show()

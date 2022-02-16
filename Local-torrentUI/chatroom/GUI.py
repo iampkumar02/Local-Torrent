@@ -33,16 +33,8 @@ class Worker(QObject):
     pvt_msg_progress = pyqtSignal(str)
     download_progress = pyqtSignal(str)
 
-    print("DONOT PRINT THIS")
-
     def run(self):
         self.conn = client.client
-        self.user_name = input("Enter your username: ")
-        myname.clear()
-        myname.append(self.user_name)
-        print("MY_Name: ", myname)
-        print("TYpe: ", myname)
-        self.conn.send(self.user_name.encode('utf-8'))
         self.receivingFromServer()
 
     def receivingFromServer(self):
@@ -78,10 +70,20 @@ class Worker(QObject):
                 elif msg[0] == "DATABASECHECK":
                     # print("Inside DATABASECHECK: ", msg[1])
                     db_name_chk.clear()
+                    msg[1],name_msg= msg[1].split("@")
                     db_name_chk.append(msg[1])
+                    db_name_chk.append(name_msg)
 
                 elif not msg[0] == "username?":
                     self.progress.emit(message)
+                else:
+                    print("New ONE:",msg[0])
+                    # self.user_name = input("Enter your username: ")
+                    self.user_name = db_name_chk[1]
+                    myname.clear()
+                    myname.append(self.user_name)
+                    print("MY_Name: ", myname)
+                    self.conn.send(self.user_name.encode('utf-8'))
 
             except Exception as e:
                 print('Error!', e)
@@ -398,8 +400,11 @@ class ChatRoom(QWidget):
             self.chatlabel1.setText(f"Messaging To: {pvt_msg[1:]}")
             self.pvt_msg_obj.show()
         else:
-            print("This is one time")
-            self.chatWidget1.append(pvt_msg)
+            c = pvt_msg.index(":")
+            if pvt_msg[0:c] == myname[0]:
+                self.chatWidget1.append(f"You:{pvt_msg[c+1:]}")
+            else:
+                self.chatWidget1.append(pvt_msg)
 
     def onClickedSend1(self):
         send_msg = self.chattext1.text()
