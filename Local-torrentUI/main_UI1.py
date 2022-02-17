@@ -6,6 +6,7 @@ import splitter
 import settings_info
 import chatroom.GUI1 as GUI
 import chatroom.chat_client as client
+import GetFiles.filesGUI as filesGUI
 
 from socket import *
 from tqdm import tqdm
@@ -15,8 +16,10 @@ import os
 textfont = QFont("Times", 7)
 pause_click = False
 cancel_clicked = False
+cnt_file = 0
 
-downlpauseconn=[]
+downlpauseconn = []
+
 
 class Worker(QThread):
 
@@ -83,8 +86,7 @@ class Worker(QThread):
             j = 0
             # while j < v/1024:
             #     j += 1
-                # bar.update(1024)
-
+            # bar.update(1024)
 
             g.close()
             while True:
@@ -92,7 +94,7 @@ class Worker(QThread):
                 try:
                     data = file_conn.recv(1024).decode("utf-8")
                 except Exception as e:
-                    print("Failed to receive packets: ",e)
+                    print("Failed to receive packets: ", e)
                     break
 
                 if not data:
@@ -109,23 +111,27 @@ class Worker(QThread):
                 self.progressbar.emit(perc, cnt_size, FILESIZE)
 
         self.disablebtn.emit()
-        print("Total Packets(KB) Received: ",cnt_size)
-        print("FILESIZE in bytes: ",FILESIZE)
-        print("FILESIZE in KB: ",round(FILESIZE/1024))
-        print("FILESIZE in MB: ",round(FILESIZE/(1024*1024)))
+        print("Total Packets(KB) Received: ", cnt_size)
+        print("FILESIZE in bytes: ", FILESIZE)
+        print("FILESIZE in KB: ", round(FILESIZE/1024))
+        print("FILESIZE in MB: ", round(FILESIZE/(1024*1024)))
         file_conn.close()
 
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
+    def __init__(self, chat_obj, connect_target: GUI.ChatRoom):
+        super(MainWindow, self).__init__()
         self.setWindowTitle("Local Torrent")
         self.setGeometry(100, 40, 800, 400)
 
         self.user_cnt = 0
         self.downl_cnt = 0
         self.no_of_downloads = 0
+        self.searchfile_cnt = 0
+        self.chat_obj = chat_obj
+
+        connect_target.searchfile_progress.connect(self.onSignalSearchFile)
 
         self.UI()
 
@@ -155,7 +161,8 @@ class MainWindow(QMainWindow):
         self.canceldownlbtn.setStyleSheet("background:#555d50;color:white")
 
     def changeInProgressBar(self, perc, cnt_size, size):
-        item = QTableWidgetItem(f"{round(cnt_size/1024)}/{round(size/(1024*1024))} MB")
+        item = QTableWidgetItem(
+            f"{round(cnt_size/1024)}/{round(size/(1024*1024))} MB")
         item.setTextAlignment(Qt.AlignCenter)
         self.downl_table.setItem(self.no_of_downloads - 1, 4, item)
         self.pbar.setValue(perc)
@@ -169,7 +176,7 @@ class MainWindow(QMainWindow):
                 downlpauseconn[0].send("PAUSEDOWNLOADING".encode("utf-8"))
                 self.pausePlay.setText("Resume")
             except Exception as e:
-                print("Error on doing Pause: ",e)
+                print("Error on doing Pause: ", e)
             print("\nClicked Pause")
         else:
             try:
@@ -188,7 +195,7 @@ class MainWindow(QMainWindow):
             self.downl_table.setRowCount(self.no_of_downloads - 1)
             self.no_of_downloads -= 1
         except Exception as e:
-            print("Error on doing Pause: ",e)
+            print("Error on doing Pause: ", e)
         print("\nClicked Cancel")
 
     def createDownloadTableRow(self, fname, size):
@@ -312,7 +319,7 @@ class MainWindow(QMainWindow):
         topleftlayout.setContentsMargins(0, 0, 0, 0)
         self.topleft.setLayout(topleftlayout)
 
-        self.chat_obj = GUI.ChatRoom()
+        # self.chat_obj = GUI.ChatRoom()
 
         toprightlayout = QVBoxLayout()
         toprightlayout.setContentsMargins(0, 0, 0, 0)
@@ -377,7 +384,6 @@ class MainWindow(QMainWindow):
                 print("Opening Pvt msg Window")
                 self.conn.send(
                     f"PVT_MSG#{self.client_name_col}@".encode('utf-8'))
-                print("NOW")
 
     def onClick_User(self):
         if self.user_cnt == 0:
@@ -386,6 +392,38 @@ class MainWindow(QMainWindow):
     def onClick_Downloads(self):
         if self.downl_cnt == 0:
             self.onClickDownloads()
+
+    def onClick_SearchFile(self):
+        if self.downl_cnt == 0:
+            self.onClickSearchFile()
+
+    def onClickSearchFile(self):
+        self.downl_cnt = 1
+        self.searchfileobj = filesGUI.Files()
+        self.tab_user = QWidget()
+        self.tab.addTab(self.tab_user, "Search Files")
+        self.fileTable = self.searchfileobj.fileTable
+
+        self.conn = client.client
+        self.conn.send("SEARCHFILE#Coin_change_problem".encode("utf-8"))
+
+        searchfilelayout = QVBoxLayout()
+        searchfilelayout.addWidget(self.searchfileobj)
+        searchfilelayout.setContentsMargins(0, 0, 0, 0)
+        self.tab_user.setLayout(searchfilelayout)
+
+    def onSignalSearchFile(self, msg):
+        global cnt_file
+        print("Searching for files...",msg)
+
+        self.fileTable.setRowCount(cnt_file+1)
+        self.fileTable.setItem(cnt_file, 0, QTableWidgetItem(msg))
+        # print(file_dir,file_name,file_size)
+        # self.fileTable.setItem(cnt_file, 0, QTableWidgetItem(file_name))
+        # self.fileTable.setItem(
+        #     cnt_file, 1, QTableWidgetItem(file_ext.upper()))
+        # self.fileTable.setItem(cnt_file, 2, QTableWidgetItem(file_size))
+        cnt_file += 1
 
     def onClickUser(self):
         # self.tab.removeTab(1)
@@ -510,6 +548,7 @@ class MainWindow(QMainWindow):
 
 # -------------------------Menu-Bar----------------------------------------------------
 
+
     def menubar(self):
         # Menu Bar-------------
         self.mb = self.menuBar()
@@ -531,6 +570,14 @@ class MainWindow(QMainWindow):
 
         if self.user_cnt == 0:
             self.users.triggered.connect(self.onClick_User)
+
+        self.searchfile = QAction("Search", self)
+        self.file.addAction(self.searchfile)
+        self.searchfile.setIcon(
+            QIcon(f"{parent}\\images\\searchicon.jpg"))
+
+        if self.searchfile_cnt == 0:
+            self.searchfile.triggered.connect(self.onClick_SearchFile)
 
         self.settings = QAction("Settings", self)
         self.file.addAction(self.settings)
@@ -563,6 +610,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    w = MainWindow()
+    chat_obj = GUI.ChatRoom()
+    w = MainWindow(chat_obj,chat_obj)
     w.show()
     sys.exit(app.exec_())

@@ -32,6 +32,7 @@ class Worker(QObject):
     file_progress = pyqtSignal(str)
     pvt_msg_progress = pyqtSignal(str)
     download_progress = pyqtSignal(str)
+    searchfile_progress = pyqtSignal(str)
 
     def run(self):
         self.conn = client.client
@@ -55,6 +56,10 @@ class Worker(QObject):
                     username.clear()
                     username.append(name)
                     print("USER_LIST: ", username)
+
+                elif msg[0] == "SEARCHFILE":
+                    print("Inside SEARCHFILE: ", msg[1])
+                    self.searchfile_progress.emit(msg[1])
 
                 elif msg[0] == "FILE_LIST":
                     print("Getting file list from server")
@@ -94,6 +99,7 @@ class Worker(QObject):
 
 
 class ChatRoom(QWidget):
+    searchfile_progress = pyqtSignal(str)
 
     def __init__(self):
         super(ChatRoom, self).__init__()
@@ -158,7 +164,11 @@ class ChatRoom(QWidget):
         self.worker.file_progress.connect(self.getFiles)
         self.worker.pvt_msg_progress.connect(self.getPvtMessage)
         self.worker.download_progress.connect(self.sendingFileToDownload)
+        self.worker.searchfile_progress.connect(self.testFunc)
         self.thread.start()
+
+    def testFunc(self,msg):
+        self.searchfile_progress.emit(msg)
 
     # Sending file to another user by establishing via another socket(P2P)
 

@@ -291,6 +291,8 @@ def handle_client(client,address):
                 database_check_name_thread = threading.Thread(target=databaseNameCheck, args=(client, msg,))
                 database_check_name_thread.start()
                 database_check_name_thread.join()
+            elif msg[0] == 'SEARCHFILE':
+                client.send(f"SEARCHFILE#{msg[1]}".encode('utf-8'))
             elif msg[0] == 'DATABASEINSERT':
                 
                 if msg[1] == 'START':
