@@ -4,7 +4,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import splitter
 import settings_info
-import chatroom.GUI as GUI
+import chatroom.GUI1 as GUI
 import chatroom.chat_client as client
 
 from socket import *

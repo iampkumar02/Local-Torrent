@@ -35,6 +35,7 @@ class Worker(QObject):
 
     def run(self):
         self.conn = client.client
+        self.conn.send("BREAK".encode("utf-8"))
         self.receivingFromServer()
 
     def receivingFromServer(self):
@@ -68,18 +69,18 @@ class Worker(QObject):
                     self.download_progress.emit(msg[1])
 
                 elif msg[0] == "DATABASECHECK":
-                    # print("Inside DATABASECHECK: ", msg[1])
-                    db_name_chk.clear()
-                    msg[1],name_msg= msg[1].split("@")
+                    print("Inside DATABASECHECK: ", msg[1])
+                    # db_name_chk.clear()
+                    msg[1], name_msg = msg[1].split("@")
                     db_name_chk.append(msg[1])
                     db_name_chk.append(name_msg)
 
                 elif not msg[0] == "username?":
                     self.progress.emit(message)
                 else:
-                    print("New ONE:",msg[0])
-                    # self.user_name = input("Enter your username: ")
-                    self.user_name = db_name_chk[1]
+                    print("New ONE:", msg[0])
+                    self.user_name = input("Enter your username: ")
+                    # self.user_name = db_name_chk[1]
                     myname.clear()
                     myname.append(self.user_name)
                     print("MY_Name: ", myname)
@@ -182,7 +183,6 @@ class ChatRoom(QWidget):
             thread_kill = False
             cancel_click = False
 
-
             thread = threading.Thread(target=self.receivingConn, args=())
             thread.start()
 
@@ -226,10 +226,10 @@ class ChatRoom(QWidget):
 
             """ Data transfer. """
             self.bar = tqdm(range(self.FILESIZE), f"Sending long.txt",
-                   unit="B", unit_scale=True, unit_divisor=1024)
+                            unit="B", unit_scale=True, unit_divisor=1024)
             self.packets = self.mainSendingFunc(0)
 
-            print("This is your Sended Packets",self.packets)
+            print("This is your Sended Packets", self.packets)
 
         except Exception as e:
             print("Unable to connect receiver: ", e)
@@ -240,7 +240,7 @@ class ChatRoom(QWidget):
         SIZE = 1024
         global pause_click
         global cancel_click
-        c=0
+        c = 0
 
         with open("E:\Computer Network\Local-torrent\server_data\share.txt", "r") as f:
             g = open('temp_file.json')
@@ -294,7 +294,7 @@ class ChatRoom(QWidget):
             if not cnt1:
                 temp_file_fetch(self.user, 0)
             # print("Size of file sended now: ", cnt_size/1024)
-            c=cnt_size
+            c = cnt_size
         thread_kill = True
         self.down_socket.close()
         return c
@@ -322,7 +322,8 @@ class ChatRoom(QWidget):
                 else:
                     print("Resume EXECUTED")
                     pause_click = False
-                    new_thread = threading.Thread(target=self.anotherSendingFun, args=())
+                    new_thread = threading.Thread(
+                        target=self.anotherSendingFun, args=())
                     new_thread.start()
 
             except Exception as e:
@@ -333,7 +334,6 @@ class ChatRoom(QWidget):
         print("Before is your Sended Packets", self.packets)
         self.packets += self.mainSendingFunc(self.packets)
         print("After is your Sended Packets", self.packets)
-
 
     # Getting all file list of selected user and displaying on new window
 

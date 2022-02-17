@@ -272,7 +272,7 @@ def handle_client(client,address):
         try:
             message = client.recv(1024).decode('utf-8')
             print("\nLength",len(message))
-            print("Message: ",message)
+            # print("Message: ",message)
             msg = message.split("#")
             if msg[0] == "FILE_LIST":
                 file_thread = threading.Thread(

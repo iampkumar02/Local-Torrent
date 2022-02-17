@@ -232,8 +232,8 @@ class SettingsUI(QWidget):
                         sizes.append(r)
 
         alldata = f"{data}@{file_dir_list}${file_list}${sizes}"
-        print(len(alldata))
-        print(len(alldata)/900)
+        # print(len(alldata))
+        # print(len(alldata)/900)
         int_no = int(len(alldata)/900)
 
         tag = "DATABASEINSERT#"
@@ -246,7 +246,7 @@ class SettingsUI(QWidget):
             j = 0
             for i in range(int_no):
                 print("\nType is Integer")
-                print(f"{tag}{alldata[j:j+900]}")
+                # print(f"{tag}{alldata[j:j+900]}")
                 time.sleep(.5)
                 self.conn.send(f"{tag}{alldata[j:j+900]}".encode('utf-8'))
                 j += 900
@@ -254,7 +254,7 @@ class SettingsUI(QWidget):
             j = 0
             for i in range(int_no+1):
                 print("\nType is float")
-                print(alldata[j:j+900])
+                # print(alldata[j:j+900])
                 time.sleep(.5)
                 self.conn.send(f"{tag}{alldata[j:j+900]}".encode('utf-8'))
                 j += 900
