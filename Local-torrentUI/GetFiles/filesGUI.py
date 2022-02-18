@@ -23,6 +23,7 @@ class Files(QWidget):
 
     def file_table(self):
         self.fileTable = QTableWidget()
+        self.fileTable.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.fileTable.setFont(textfont)
         self.fileTable.setColumnCount(3)
         self.fileTable.setHorizontalHeaderItem(

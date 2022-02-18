@@ -236,6 +236,35 @@ def insertIntoDatabase(client, name, msg):
     db.commit()
 
 
+def databaseSearchAllFiles(client,msg):
+    try:
+        query_seachname = f"SELECT * FROM uploaded_file_list WHERE file_name LIKE '%{msg[1]}%';"
+        cursor.execute(query_seachname)
+        db_names = cursor.fetchall()
+        print("Sending Files from server...")
+
+        tag = msg[0]
+        for n in db_names:
+            # print("\n",n)
+            data = f"{tag}#"
+            try:
+                q = "SELECT username FROM users WHERE file_id = %s"
+                values = (n[0],)
+
+                cursor.execute(q, values)
+                searchuser = cursor.fetchall()
+                data += f"'{searchuser[0][0]}'"
+                time.sleep(1)
+            except Exception as e:
+                print("Unable to find username using id: ", e)
+
+            data+=f"{n}"
+            # print("\nFInal DATA: ", data)
+            client.send(data.encode('utf-8'))
+
+    except Exception as e:
+        print("Unable to find Searched File name: ", e)
+
 # This function will receive every message coming from each users----------------------
 # And each function inside this, using thread so that each functions execute independently
 
@@ -292,7 +321,9 @@ def handle_client(client,address):
                 database_check_name_thread.start()
                 database_check_name_thread.join()
             elif msg[0] == 'SEARCHFILE':
-                client.send(f"SEARCHFILE#{msg[1]}".encode('utf-8'))
+                database_searchAllFiles_thread = threading.Thread(target=databaseSearchAllFiles, args=(client, msg,))
+                database_searchAllFiles_thread.start()
+                database_searchAllFiles_thread.join()
             elif msg[0] == 'DATABASEINSERT':
                 
                 if msg[1] == 'START':

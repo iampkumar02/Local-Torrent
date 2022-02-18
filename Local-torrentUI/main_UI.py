@@ -6,17 +6,21 @@ import splitter
 import settings_info
 import chatroom.GUI as GUI
 import chatroom.chat_client as client
+import GetFiles.filesGUI as filesGUI
 
 from socket import *
 from tqdm import tqdm
 import json
 import os
+import time
 
 textfont = QFont("Times", 7)
 pause_click = False
 cancel_clicked = False
+cnt_file = 0
 
-downlpauseconn=[]
+downlpauseconn = []
+
 
 class Worker(QThread):
 
@@ -27,7 +31,7 @@ class Worker(QThread):
 
     def run(self):
         print("inside run fun()")
-        # self.file_socket()
+        self.file_socket()
 
     # socket for file transfer
 
@@ -83,8 +87,7 @@ class Worker(QThread):
             j = 0
             # while j < v/1024:
             #     j += 1
-                # bar.update(1024)
-
+            # bar.update(1024)
 
             g.close()
             while True:
@@ -92,7 +95,7 @@ class Worker(QThread):
                 try:
                     data = file_conn.recv(1024).decode("utf-8")
                 except Exception as e:
-                    print("Failed to receive packets: ",e)
+                    print("Failed to receive packets: ", e)
                     break
 
                 if not data:
@@ -109,23 +112,27 @@ class Worker(QThread):
                 self.progressbar.emit(perc, cnt_size, FILESIZE)
 
         self.disablebtn.emit()
-        print("Total Packets(KB) Received: ",cnt_size)
-        print("FILESIZE in bytes: ",FILESIZE)
-        print("FILESIZE in KB: ",round(FILESIZE/1024))
-        print("FILESIZE in MB: ",round(FILESIZE/(1024*1024)))
+        print("Total Packets(KB) Received: ", cnt_size)
+        print("FILESIZE in bytes: ", FILESIZE)
+        print("FILESIZE in KB: ", round(FILESIZE/1024))
+        print("FILESIZE in MB: ", round(FILESIZE/(1024*1024)))
         file_conn.close()
 
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
+    def __init__(self, chat_obj, connect_target: GUI.ChatRoom):
+        super(MainWindow, self).__init__()
         self.setWindowTitle("Local Torrent")
         self.setGeometry(100, 40, 800, 400)
 
         self.user_cnt = 0
         self.downl_cnt = 0
         self.no_of_downloads = 0
+        self.searchfile_cnt = 0
+        self.chat_obj = chat_obj
+
+        connect_target.searchfile_progress.connect(self.onSignalSearchFile)
 
         self.UI()
 
@@ -134,6 +141,7 @@ class MainWindow(QMainWindow):
         self.menubar()
         self.tabs()
         self.table()
+        self.onClick_Downloads()
         self.fileThread()
         self.layouts()
 
@@ -155,7 +163,8 @@ class MainWindow(QMainWindow):
         self.canceldownlbtn.setStyleSheet("background:#555d50;color:white")
 
     def changeInProgressBar(self, perc, cnt_size, size):
-        item = QTableWidgetItem(f"{round(cnt_size/1024)}/{round(size/(1024*1024))} MB")
+        item = QTableWidgetItem(
+            f"{round(cnt_size/1024)}/{round(size/(1024*1024))} MB")
         item.setTextAlignment(Qt.AlignCenter)
         self.downl_table.setItem(self.no_of_downloads - 1, 4, item)
         self.pbar.setValue(perc)
@@ -169,7 +178,7 @@ class MainWindow(QMainWindow):
                 downlpauseconn[0].send("PAUSEDOWNLOADING".encode("utf-8"))
                 self.pausePlay.setText("Resume")
             except Exception as e:
-                print("Error on doing Pause: ",e)
+                print("Error on doing Pause: ", e)
             print("\nClicked Pause")
         else:
             try:
@@ -188,7 +197,7 @@ class MainWindow(QMainWindow):
             self.downl_table.setRowCount(self.no_of_downloads - 1)
             self.no_of_downloads -= 1
         except Exception as e:
-            print("Error on doing Pause: ",e)
+            print("Error on doing Pause: ", e)
         print("\nClicked Cancel")
 
     def createDownloadTableRow(self, fname, size):
@@ -224,8 +233,6 @@ class MainWindow(QMainWindow):
         item.setTextAlignment(Qt.AlignCenter)
         self.downl_table.setItem(
             self.no_of_downloads, 4, item)
-        # self.downl_table.setItem(
-        #     self.no_of_downloads, 5, QTableWidgetItem("Speed"))
         print("Row Added")
         self.no_of_downloads += 1
 
@@ -249,8 +256,6 @@ class MainWindow(QMainWindow):
             3, QTableWidgetItem("Cancel"))
         self.downl_table.setHorizontalHeaderItem(
             4, QTableWidgetItem("Size"))
-        # self.downl_table.setHorizontalHeaderItem(
-        #     5, QTableWidgetItem("Speed"))
 
         header = self.downl_table.horizontalHeader()
         header.setSectionResizeMode(1, QHeaderView.Stretch)
@@ -269,26 +274,20 @@ class MainWindow(QMainWindow):
     def tabs(self):
         self.tab = QTabWidget()
         self.tab.setFont(textfont)
-        # self.tab1 = QWidget()
-        # self.tab2 = QWidget()
-        # self.tab.addTab(self.tab1, "Tab 1")
-        # self.tab.addTab(self.tab2, "Tab 2")
         self.tab.setTabsClosable(True)
         self.tab.tabsClosable()
         self.tab.setMovable(True)
-        # self.tab.setContentsMargins(0, 0, 0, 0)
-        # self.tab.setStyleSheet(
-        #     "border: 0 solid white")
 
-# Giving layouts to the application
+    # Giving layouts to the application
 
-# QWidget --> HBox --> Splitter(imort QWidget --> HBox) -->
-# Splitter(HBox) --> (HBox having 3 QWidgets --> (topright,topleft,bottom))
+    # QWidget --> HBox --> Splitter(imort QWidget --> HBox) -->
+    # Splitter(HBox) --> (HBox having 3 QWidgets --> (topright,topleft,bottom))
 
-# topleft(QWidget) --> (VBox having tab Widget)
+    # topleft(QWidget) --> (VBox having tab Widget)
 
-# topright(QWidget) --> VBox --> ChatRoom(import QWidget --> VBox)
-# ChatRoom(VBox) --> (VBox (contains 2 Widgets),HBox (contains 2 Widgets))
+    # topright(QWidget) --> VBox --> ChatRoom(import QWidget --> VBox)
+    # ChatRoom(VBox) --> (VBox (contains 2 Widgets),HBox (contains 2 Widgets))
+
     def layouts(self):
         mainWidget = QWidget()
         self.splitter_obj = splitter.Splitter()
@@ -312,7 +311,7 @@ class MainWindow(QMainWindow):
         topleftlayout.setContentsMargins(0, 0, 0, 0)
         self.topleft.setLayout(topleftlayout)
 
-        self.chat_obj = GUI.ChatRoom()
+        # self.chat_obj = GUI.ChatRoom()
 
         toprightlayout = QVBoxLayout()
         toprightlayout.setContentsMargins(0, 0, 0, 0)
@@ -377,7 +376,6 @@ class MainWindow(QMainWindow):
                 print("Opening Pvt msg Window")
                 self.conn.send(
                     f"PVT_MSG#{self.client_name_col}@".encode('utf-8'))
-                print("NOW")
 
     def onClick_User(self):
         if self.user_cnt == 0:
@@ -386,6 +384,92 @@ class MainWindow(QMainWindow):
     def onClick_Downloads(self):
         if self.downl_cnt == 0:
             self.onClickDownloads()
+
+    def onClick_SearchFile(self):
+        if self.searchfile_cnt == 0:
+            self.onClickSearchFile()
+
+    def onClickSearchFile(self):
+        self.searchfile_cnt = 1
+        self.searchfileobj = filesGUI.Files()
+        self.tab_user = QWidget()
+        self.tab.addTab(self.tab_user, "Search Files")
+        self.fileTable = self.searchfileobj.fileTable
+        self.downbtn = self.searchfileobj.downbtn
+        self.downbtn.clicked.connect(self.onClickDownlSearchedFile)
+        self.searchbar = self.searchfileobj.searchEntry
+        self.fileSearchLayout = self.searchfileobj.fileSearchLayout
+        self.searchbar.textChanged.connect(self.update_searchedFiles)
+
+        self.fileTable.setColumnCount(4)
+        self.fileTable.setHorizontalHeaderItem(
+            0, QTableWidgetItem("Username"))
+        self.fileTable.setHorizontalHeaderItem(
+            1, QTableWidgetItem("File name"))
+        self.fileTable.setHorizontalHeaderItem(
+            2, QTableWidgetItem("File Extension"))
+        self.fileTable.setHorizontalHeaderItem(3, QTableWidgetItem("Size"))
+
+        self.searchBtn = QPushButton("Search")
+        self.searchBtn.clicked.connect(self.onClickFileSearchBtn)
+        self.searchBtn.setStyleSheet("font-weight: normal")
+        self.fileSearchLayout.addWidget(self.searchBtn)
+
+        searchfilelayout = QVBoxLayout()
+        searchfilelayout.addWidget(self.searchfileobj)
+        searchfilelayout.setContentsMargins(0, 0, 0, 0)
+        self.tab_user.setLayout(searchfilelayout)
+
+    def onClickFileSearchBtn(self):
+        global cnt_file
+        cnt_file = 0
+        self.conn = client.client
+        self.fileTable.setRowCount(0)
+        self.conn.send(f"SEARCHFILE#{self.searchbar.text()}".encode("utf-8"))
+
+    def onSignalSearchFile(self, msg):
+        global cnt_file
+        file_items = msg.split("'")[1::2]
+        # print("\nFIle Items: ",file_items)
+        print("CNT: ", cnt_file)
+        try:
+            file_ext = file_items[1].split(".")[-1]
+            self.fileTable.setRowCount(cnt_file+1)
+            self.fileTable.setItem(
+                cnt_file, 0, QTableWidgetItem(file_items[0]))
+            # print(file_dir,file_name,file_size)
+            self.fileTable.setItem(
+                cnt_file, 1, QTableWidgetItem(file_items[2]))
+            self.fileTable.setItem(
+                cnt_file, 2, QTableWidgetItem(file_ext.upper()))
+            self.fileTable.setItem(
+                cnt_file, 3, QTableWidgetItem(file_items[3]))
+            cnt_file += 1
+        except Exception as e:
+            print("Unable to add into table: ", e)
+
+    def update_searchedFiles(self, text):
+        rowCount = self.fileTable.rowCount()
+        for row in range(rowCount):
+            if text.lower() in self.fileTable.item(row, 1).text().lower():
+                # widget.show()
+                self.fileTable.showRow(row)
+            else:
+                self.fileTable.hideRow(row)
+
+    def onClickDownlSearchedFile(self):
+        print("Download Button Clicked")
+        for item in self.fileTable.selectedItems():
+            row = item.row()
+            col = item.column()
+            print(item.text(), row, col)
+            tag = "DOWNLOAD#"
+            info = tag + \
+                self.fileTable.item(row, 1).text()+"@" + \
+                self.fileTable.item(row, 0).text()
+            print("Info: ", info)
+            self.conn.send(info.encode("utf-8"))
+            print("Sucessfully sended info to server")
 
     def onClickUser(self):
         # self.tab.removeTab(1)
@@ -510,6 +594,7 @@ class MainWindow(QMainWindow):
 
 # -------------------------Menu-Bar----------------------------------------------------
 
+
     def menubar(self):
         # Menu Bar-------------
         self.mb = self.menuBar()
@@ -531,6 +616,14 @@ class MainWindow(QMainWindow):
 
         if self.user_cnt == 0:
             self.users.triggered.connect(self.onClick_User)
+
+        self.searchfile = QAction("Search", self)
+        self.file.addAction(self.searchfile)
+        self.searchfile.setIcon(
+            QIcon(f"{parent}\\images\\searchicon.jpg"))
+
+        if self.searchfile_cnt == 0:
+            self.searchfile.triggered.connect(self.onClick_SearchFile)
 
         self.settings = QAction("Settings", self)
         self.file.addAction(self.settings)
@@ -563,6 +656,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    w = MainWindow()
+    chat_obj = GUI.ChatRoom()
+    w = MainWindow(chat_obj, chat_obj)
     w.show()
     sys.exit(app.exec_())

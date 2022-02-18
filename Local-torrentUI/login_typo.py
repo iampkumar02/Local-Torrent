@@ -17,7 +17,8 @@ class SettingsUI(QWidget):
         self.setWindowTitle("Login Settings")
         self.setFixedSize(490, 400)
         self.UI()
-        self.main_obj = main_UI.MainWindow()
+        chat_obj = GUI.ChatRoom()
+        self.main_obj = main_UI.MainWindow(chat_obj, chat_obj)
         # self.main_obj.show()
 
     def UI(self):

@@ -58,7 +58,7 @@ class Worker(QObject):
                     print("USER_LIST: ", username)
 
                 elif msg[0] == "SEARCHFILE":
-                    print("Inside SEARCHFILE: ", msg[1])
+                    # print("Inside SEARCHFILE: ", msg[1])
                     self.searchfile_progress.emit(msg[1])
 
                 elif msg[0] == "FILE_LIST":
@@ -75,7 +75,6 @@ class Worker(QObject):
 
                 elif msg[0] == "DATABASECHECK":
                     print("Inside DATABASECHECK: ", msg[1])
-                    # db_name_chk.clear()
                     msg[1], name_msg = msg[1].split("@")
                     db_name_chk.append(msg[1])
                     db_name_chk.append(name_msg)
@@ -391,7 +390,7 @@ class ChatRoom(QWidget):
             col = item.column()
             print(item.text(), row, col)
             tag = "DOWNLOAD#"
-            info = tag+item.text()+"@"+self.client_name
+            info = tag+self.fileTable.item(row, 0).text()+"@"+self.client_name
             print("Info: ", info)
             self.conn.send(info.encode("utf-8"))
             print("Sucessfully sended info to server")
