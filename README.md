@@ -14,7 +14,7 @@
     - Once the server is running, the user needs to run the `login_typo.py` file. The user will be directed to a pyqt5 application in which the user will have to enter the
       details regarding his username (each user will have a unique username). Along with this the user will also be required to select the uplad and download directory from his 
       computer.  
-      ![LoginScreen](./projectScreenshots/loginScreen.png)
+<!--       ![LoginScreen](./projectScreenshots/loginScreen.png) -->
       ![LoginUsername](./projectScreenshots/loginScreenUsername.png)
       ![loginScreenDirectories](./projectScreenshots/loginScreenDirectories.png)
     - After this the information will be stored in the database. Now the user will be able to open his DC++ application. The following is the main page of the application.
