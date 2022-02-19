@@ -1,4 +1,4 @@
-# DC++ application
+# DC++
   - What is DC++?
     - DC++ is a desktop application that runs on intra-network and replicates the features of torrent.The application uses various networking concepts and
       algorithms to achieve the best file transfer speed possible in peer to peer, one peer to multiple peers and multiple peers to one peer communications.
@@ -33,3 +33,6 @@
     - ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
     - ![Qt](https://img.shields.io/badge/Qt-%23217346.svg?style=for-the-badge&logo=Qt&logoColor=white)
     - `Socket Programming`
+  - Contributors:
+    - `Prashant Kumar(2020IMG-050)`
+    - `Devansh Agarwal(2020IMG-020)`
