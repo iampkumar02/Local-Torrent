@@ -63,7 +63,7 @@ def file_socket():
     while True:
         # hostname_file = gethostname()
         # ip_file = gethostbyname(hostname_file)
-        print("Waiting for new connection...")
+        # print("Waiting for new connection...")
         file_conn, file_addr = server_file.accept()
         print("Connection established to download")
 

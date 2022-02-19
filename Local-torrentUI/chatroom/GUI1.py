@@ -82,7 +82,7 @@ class Worker(QObject):
                 elif not msg[0] == "username?":
                     self.progress.emit(message)
                 else:
-                    print("New ONE:", msg[0])
+                    # print("New ONE:", msg[0])
                     self.user_name = input("Enter your username: ")
                     # self.user_name = db_name_chk[1]
                     myname.clear()
@@ -198,7 +198,7 @@ class ChatRoom(QWidget):
             FORMAT = "utf-8"
             user = receiver_name
             self.user = user
-            FILENAME = "E:\Computer Network\Local-torrent\server_data\\share.txt"
+            FILENAME = upload_file_dir
             self.FILESIZE = os.path.getsize(FILENAME)
 
             f = open('temp_file.json')
@@ -222,6 +222,7 @@ class ChatRoom(QWidget):
                 self.down_socket.send(
                     f"{upload_file_dir}@{receiver_dir}".encode("utf-8"))
                 print("First Sended!", f"{upload_file_dir}@{receiver_dir}")
+                self.upload_file_dir = upload_file_dir
             except Exception as e:
                 print("First not sended")
             time.sleep(1)
@@ -251,7 +252,7 @@ class ChatRoom(QWidget):
         global cancel_click
         c = 0
 
-        with open("E:\Computer Network\Local-torrent\server_data\share.txt", "r") as f:
+        with open(self.upload_file_dir, "r") as f:
             g = open('temp_file.json')
             data = json.load(g)
             v = 0

@@ -30,7 +30,6 @@ class Worker(QThread):
     disablebtn = pyqtSignal()
 
     def run(self):
-        print("inside run fun()")
         self.file_socket()
 
     # socket for file transfer
@@ -46,7 +45,7 @@ class Worker(QThread):
         while True:
             # hostname_file = gethostname()
             # ip_file = gethostbyname(hostname_file)
-            print("Waiting for new connection...")
+            # print("Waiting for new connection...")
             file_conn, file_addr = server_file.accept()
             cancel_clicked = False
             downlpauseconn.clear()
@@ -74,7 +73,7 @@ class Worker(QThread):
         bar = tqdm(range(FILESIZE), f"Receiving long.txt",
                    unit="B", unit_scale=True, unit_divisor=1024)
         cnt_size = 0
-        with open(f"E:\Computer Network\Local-torrent\client_data\\{file_name}", "w") as f:
+        with open(f"{down_dir}\\{file_name}", "w") as f:
             g = open('temp_file.json')
             data = json.load(g)
             v = 0

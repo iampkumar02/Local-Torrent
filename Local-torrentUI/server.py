@@ -236,7 +236,7 @@ def insertIntoDatabase(client, name, msg):
     db.commit()
 
 
-def databaseSearchAllFiles(client,msg):
+def databaseSearchAllFiles(client,name,msg):
     try:
         query_seachname = f"SELECT * FROM uploaded_file_list WHERE file_name LIKE '%{msg[1]}%';"
         cursor.execute(query_seachname)
@@ -254,6 +254,8 @@ def databaseSearchAllFiles(client,msg):
                 cursor.execute(q, values)
                 searchuser = cursor.fetchall()
                 data += f"'{searchuser[0][0]}'"
+                if name == searchuser[0][0]:
+                    continue
                 time.sleep(1)
             except Exception as e:
                 print("Unable to find username using id: ", e)
@@ -321,7 +323,7 @@ def handle_client(client,address):
                 database_check_name_thread.start()
                 database_check_name_thread.join()
             elif msg[0] == 'SEARCHFILE':
-                database_searchAllFiles_thread = threading.Thread(target=databaseSearchAllFiles, args=(client, msg,))
+                database_searchAllFiles_thread = threading.Thread(target=databaseSearchAllFiles, args=(client,name, msg,))
                 database_searchAllFiles_thread.start()
                 database_searchAllFiles_thread.join()
             elif msg[0] == 'DATABASEINSERT':

@@ -14,7 +14,7 @@ class PvtMessage(QWidget):
 
     def __init__(self):
         super(PvtMessage, self).__init__()
-        print("Inside PvtMessage Class!")
+        # print("Inside PvtMessage Class!")
         self.initUI()
 
     def initUI(self):
