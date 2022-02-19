@@ -58,7 +58,7 @@
   
   - By double clicking on `Message` corresponding to the user. Here is a image for private chatting between two users
    
-   ![activeUsers](./projectScreenshots/PvtMessaging.png)
+    ![activeUsers](./projectScreenshots/PvtMessaging.png)
     
   - By double clicking on the `GET` button, the user can fetch all the files that have been shared by the corresponding user. Or directly search file in search tab.
   
@@ -68,7 +68,7 @@
     
   - After selecting the files, click on the `Download` button, now the user can see the `Downloads` in the download tab. While downloading, the user can pause, resume or cancel the downloading.  
       
-    ![DownloadImage](./projectScreenshots/DownloadImage1.jpg)
+    ![DownloadImage](./projectScreenshots/DownloadImage1.png)
 
 ## Contributors:
   - `Prashant Kumar(2020IMG-050)`
