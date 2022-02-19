@@ -158,6 +158,7 @@ class SettingsUI(QWidget):
             self.username.adjustSize()
 
             time.sleep(1)
+            gui_obj=[]
             gui_obj = GUI.db_name_chk
             print("Login_typo: ",gui_obj[0])
             if gui_obj[0] == "Username already exists":

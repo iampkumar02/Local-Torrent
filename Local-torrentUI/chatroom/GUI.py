@@ -75,6 +75,7 @@ class Worker(QObject):
                 elif msg[0] == "DATABASECHECK":
                     print("Inside DATABASECHECK: ", msg[1])
                     msg[1], name_msg = msg[1].split("@")
+                    db_name_chk.clear()
                     db_name_chk.append(msg[1])
                     db_name_chk.append(name_msg)
 

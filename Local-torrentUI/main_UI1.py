@@ -30,7 +30,7 @@ class Worker(QThread):
     disablebtn = pyqtSignal()
 
     def run(self):
-        # self.file_socket()
+        self.file_socket()
         pass
 
     # socket for file transfer
